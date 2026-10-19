@@ -1,0 +1,50 @@
+{
+  "architecture": "armv7l",
+  "build": "T-PTMCAKUC-0090-REL-202603190200",
+  "current_settings": {
+    "db/appfw/home_appid": "MiniHub001.Hub",
+    "db/appfw/startup_appid": "MiniHub001.Hub",
+    "db/menu/smart_hub/ontvsetting/auto_start": 1,
+    "home_operation": "MiniHub001.Hub"
+  },
+  "date": "2026-10-18",
+  "firmware": "T-PTMCAKUC-0090-2220.4",
+  "framework": "net6.0",
+  "home_trial_status": "complete-owner-requested-keep",
+  "host_sha256": "e5840c05c567183295f0bb37e3b28613618cec5e0c8c08a44a400672a1c73310",
+  "kernel": "5.4.77",
+  "launcher_sha256": "3186666daae073ec8528ff277b71ea071f71e8a30fa58126b4db6494104e55cf",
+  "launcher_version": "0.4.1",
+  "model": "QN77S89CBFXZA",
+  "original_settings": {
+    "db/appfw/home_appid": "com.samsung.tv.csfs",
+    "db/appfw/startup_appid": "com.samsung.tv.csfs",
+    "db/menu/smart_hub/ontvsetting/auto_start": 1
+  },
+  "platform": "23_PTM_QD_T09",
+  "runtime": "6.0.9",
+  "runtime_hashes_match_s90d": true,
+  "tizen_version": "9.0.0",
+  "verification": {
+    "application_launch_and_home_return": true,
+    "automatic_recovery": true,
+    "custom_startup": false,
+    "developer_host_matches_route": true,
+    "installed_launcher_files": true,
+    "manual_recovery_startup_readback": true,
+    "native_home_assignment": true,
+    "native_home_query": true,
+    "physical_home_button": true,
+    "reboot": false,
+    "recovery_wrapper_readiness": true,
+    "restore_to_recorded_home": true,
+    "root_attempted": false,
+    "sdb_protocol_handshake": true,
+    "sdk_metadata_commands": true,
+    "signed_launcher_install": true,
+    "signing_certificates_sdk_duid_verified": true,
+    "user_confirmed_app_list_and_remote_navigation": true,
+    "watchdog_cancellation": false,
+    "watchdog_retired": true
+  }
+}

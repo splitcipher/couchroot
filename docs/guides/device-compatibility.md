@@ -8,6 +8,14 @@ fresh hardware probe.
 | S90D | Firmware 2130.0, Tizen 9, ARMv7 | Preserve the verified launch bridge and explicit Samsung Home fallback. |
 | QN90A | Firmware 2301.1, Tizen 6, Chromium 76, ARMv7 | Treat this as the older browser baseline; maintain existing CSS and API fallbacks. |
 
+S89C (`QN77S89CBFXZA`, firmware 2220.4) passed a
+[scoped launcher installation and physical Home-button test](../devices/s89c/README.md)
+on 2026-10-18. The owner confirmed app navigation and Home return from another
+app. Native Home setters and recovery also passed on its Tizen 9.0.0 / ARMv7 /
+.NET 6.0.9 environment. Cold reboot and standby checks remain pending. General
+setup/deployment commands continue to refuse this model while its full profile
+is developed.
+
 Keep shipped JavaScript compatible with the existing older-browser style.
 Avoid introducing unsupported syntax or browser APIs without a fallback. The
 Node-based workbench and tests may use modern syntax; they do not run on the TV.

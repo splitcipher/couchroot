@@ -1,6 +1,7 @@
 """Execute staging guards against synthetic local files; no TV/NAS transport."""
 from pathlib import Path
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -16,11 +17,12 @@ class StagingTests(unittest.TestCase):
     def script(self,path,digest):
         # Supply portable sha256sum for the same shell guards on macOS and Linux.
         command=path.parent/'sha256sum'
-        command.write_text('#!'+sys.executable+'\nimport hashlib,sys\nfrom pathlib import Path\np=Path(sys.argv[1]);print(hashlib.sha256(p.read_bytes()).hexdigest()+"  "+str(p))\n')
+        code='import hashlib,sys;from pathlib import Path;p=Path(sys.argv[1]);print(hashlib.sha256(p.read_bytes()).hexdigest()+"  "+str(p))'
+        command.write_text('#!/bin/sh\nexec '+shlex.quote(sys.executable)+' -c '+shlex.quote(code)+' "$@"\n')
         command.chmod(0o700)
         return subprocess.run(['sh','-c','set -eu\n'+clear_verified_stage(str(path),digest)],env=dict(os.environ,PATH=str(path.parent)+os.pathsep+os.environ['PATH']),capture_output=True)
     def test_verified_complete_stage_can_be_recreated(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory(prefix='couchroot staging ') as tmp:
             path=Path(tmp)/'run-owned.new';path.write_bytes(b'complete')
             self.assertEqual(self.script(path,sha(b'complete')).returncode,0)
             self.assertFalse(path.exists())

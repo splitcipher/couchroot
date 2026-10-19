@@ -104,6 +104,10 @@ checks. Python 3 is also required to build an unsigned package with `npm run pac
 
 ## Putting it on a TV
 
+The [S89C record](docs/devices/s89c/README.md) covers inspection and a scoped
+launcher/Home trial on firmware 2220.4. General setup and deployment commands still
+refuse this model; cold-boot and standby validation remain pending.
+
 Start with the [setup guide](docs/guides/tv-setup.md), [compatibility notes](docs/guides/device-compatibility.md)
 and [recovery guidance](docs/guides/tv-setup.md#apply-interruption-and-recovery). If you already have an installation,
 use the separate [UI deployment guide](docs/guides/ui-deployment.md).

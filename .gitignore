@@ -34,6 +34,7 @@ tvsetup/native/obj/
 
 # Private installation choices, diagnostics and signing containers.
 .venv/
+.local-tools/
 site.json
 trust.json
 *.pfx
