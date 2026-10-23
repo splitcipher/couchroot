@@ -332,3 +332,11 @@ The current pre-feature rollback is the privately prepared 0.3.99 signed copy of
 `~/.local/share/samsung-tv-research/signing/edit-apps-rollback/rollback.sh`.
 Full integration rollback remains `python3 tools/s90d/restore.py`. Signing material and
 raw device evidence stay outside Git.
+
+## Alternative screensaver route (independent)
+
+An independent owner report documents a route that leaves `libgl-demo-app.so`
+untouched and overlays `ContentList.json` to select a signed web app:
+[web-app-screensaver.md](web-app-screensaver.md). It is limited to
+`QN55S90DAGXZD` / `T-PTMDUABC-0090-2130.0`, is not a supported profile, and the
+boot bytes are per-firmware.

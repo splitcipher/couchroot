@@ -69,6 +69,7 @@ evidence referenced by the lab notes lives in [lab/inventory/](lab/inventory/).
 - [Samsung S90D on-demand root after reboot](lab/devices/s90d/persistence.md)
 - [S90D boot-splash acknowledgement investigation](lab/devices/s90d/splash-acknowledgement.md)
 - [S90D telemetry to TrueNAS Netdata](lab/devices/s90d/telemetry.md)
+- [Alternative S90D screensaver route (web app)](lab/devices/s90d/web-app-screensaver.md)
 
 ## Lab: platform research
 
