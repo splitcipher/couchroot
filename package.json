@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "node preview/server.cjs",
     "test": "node --test tests/*.test.cjs tests/autonomous-root/*.test.cjs",
+    "check:web-es5": "node scripts/check-web-es5.cjs",
     "test:ui": "node --test tests/ui.test.cjs tests/preview.test.cjs",
     "screenshots": "node preview/screenshots.cjs",
     "package": "python3 scripts/package.py",

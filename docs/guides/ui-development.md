@@ -64,6 +64,7 @@ shipped HTML retains its offline content policy (`connect-src 'none'`).
 ## Validate and package
 
 ```sh
+npm run check:web-es5
 npm run test:ui
 npm test
 npm run screenshots
@@ -74,7 +75,9 @@ npm run package
 Screenshot capture starts its own temporary server and writes 1920×1080 PNGs
 for every scenario to `test-results/screenshots/`. It uses fresh browser contexts,
 a fixed clock and reduced motion. Inspect the images; these are not golden-image
-tests. The older-browser checks exercise selected fallbacks in modern Chromium,
+tests. `npm run check:web-es5` parses every raw `web/*.js` file as an ES5 script and
+runs in the web/offline CI job. It checks syntax only, not runtime APIs or CSS.
+The older-browser checks exercise selected fallbacks in modern Chromium,
 not a Tizen emulator.
 
 Packaging writes `dist/MinimalHub-<device>-unsigned.wgt` and `dist/manifest-<device>.json`.

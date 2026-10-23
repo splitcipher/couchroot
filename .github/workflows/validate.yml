@@ -53,6 +53,7 @@ jobs:
       - run: python -m unittest discover -s tests -p '*_test.py'
       - run: python -m unittest discover -s telemetry/s90d/tests
       - run: npm ci
+      - run: npm run check:web-es5
       - run: python -m pip install --require-hashes -r .github/requirements-format.txt
       - run: ruff format --check tvsetup scripts
       - run: npm run format:check
