@@ -52,9 +52,9 @@ ContentList hashes and leaves the stock saver intact on any mismatch.
   (70 bytes). The helper checks both.
 - After a normal reboot, `/opt/minimal-saver/last-boot.log` shows
   `active: read-only ContentList overlay`; the foreground app was
-  `KurumiSvr1.Saver`; the stock saver was not modified. Root used for the
-  original setup was the volatile `archive-launcher` route; it is not needed at
-  boot and no root agent remains.
+  `KurumiSvr1.Saver`; the on-disk stock saver was not modified. The on-demand
+  `archive-launcher` root route used for the original setup is not needed at
+  boot; the helper itself runs via AT-HUB, exits, and no root agent remains.
 
 ## Trade-offs and limits
 
