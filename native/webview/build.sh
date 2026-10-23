@@ -24,6 +24,7 @@ threads=
 docker run --rm --platform linux/amd64 --network none \
   -v "$source_dir/..:/src:ro" -v "$WEBVIEW_OUTPUT_DIR:/out" samsung-native-collector:bullseye \
   arm-linux-gnueabi-gcc -std=c99 -O2 -Wall -Wextra -Werror \
+  -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now \
   -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp \
   "/src/webview/${program%%:*}.c" -ldl $threads -o "/out/${program#*:}"
 docker run --rm --platform linux/amd64 --network none \
