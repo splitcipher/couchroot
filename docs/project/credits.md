@@ -46,5 +46,6 @@ behaves identically. Firmware bodies and private device captures are excluded.
 The local workflow uses Node.js, Python/lxml, Playwright/Chromium, .NET and
 Emscripten. Dependency versions are recorded in `package-lock.json`,
 `tvsetup/requirements.txt`, `global.json` and the build workflow. These projects
-retain their own licenses. Codex assisted with implementation, investigation,
-testing and documentation; hardware observations are identified separately.
+retain their own licenses. Anthropic's Claude and OpenAI's Codex assisted with
+implementation, investigation, testing and documentation; hardware observations
+are identified separately.

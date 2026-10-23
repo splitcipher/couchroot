@@ -154,10 +154,14 @@ do not count. Current TV preferences remain preserved. See the [first-run setup 
 ## Status
 
 The signed web Hub and telemetry service are in use on my QN90A and S90D and have
-been reboot-verified on both. The root agent's native worker passed hardware
-acceptance on the S90D (agent 0.7.54, 2026-10-21); the latest QN90A agent upgrade
-still needs acceptance. The WebView launcher is experimental, pure-native drawing
-is retired, and other models, regions and firmware are unverified.
+been reboot-verified on both. On S90D, agent 0.7.54 passed forward/reverse native
+handoffs, root command/job checks, retained-job preservation, the native gate and
+an unattended reboot (2026-10-21). Interrupted-upgrade fault injection, physical
+UI and standby/power-interruption checks, unattended restart reliability and a
+complete 24-hour endurance run remain open. That recorded reboot does not close
+the broader clean-boot/recovery matrix. The latest QN90A agent upgrade still needs
+acceptance. The WebView launcher is experimental, pure-native drawing is retired,
+and other models, regions and firmware are unverified.
 
 Before enabling agent loopback acquisition, read its
 [recovery procedure](agent/README.md#recovery): a failed start may require

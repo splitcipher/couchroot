@@ -1,4 +1,4 @@
-/* Native worker candidate; managed remains the deployed fallback.
+/* Native is the only packaged worker; no managed fallback is attempted.
  * Original Couchroot code. SPDX-License-Identifier: 0BSD */
 #define COUCHROOT_NATIVE_WORKER 1
 #include "common.h"

@@ -59,11 +59,13 @@ AT-HUB/saver/splash rewrites, S90D telemetry migration/native graphical launcher
 and removal of all .NET dependencies.
 Revisit an item only for a demonstrated reliability, resource or maintenance issue.
 
-The separately developed native root worker/acquisition is now included in the
-[combined release candidate](release-readiness.md), with the small managed entry
-bridge and recovery fallback retained. Its bounded 0.7.52 device trials are
-separate from telemetry acceptance. Further native-only entry work and fallback
-removal are deferred; do not treat the old root-worker deferral as current status.
+The root agent now packages only the native worker/acquisition path. The small
+managed entry bridge remains, but the managed worker and its automatic fallback
+have been removed; see the [agent support contract](../../agent/README.md#support).
+Historical managed-return recovery requires the retained previous signed package,
+checkout and journals. Native-only entry work remains deferred. The
+[current acceptance record](release-readiness.md) separates recorded root-agent
+results from open hardware checks and telemetry acceptance.
 
 Keep existing helpers, manual diagnostics, exact artifacts and executable paths
 needed by installations and recovery journals. Preserve current S90D recovery;
