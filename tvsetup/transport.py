@@ -561,7 +561,8 @@ class Transport:
                 f"if test -e /opt/usr/apps/{pkg} || test -e /opt/share/packages/{pkg}.xml; then echo present; else echo absent; fi"
             )
         queries["integrity"] = f"sqlite3 -readonly {PKG_DB} 'pragma quick_check;'"
-        for n, path in enumerate(paths(self.profile["id"])):
+        snapshot_paths = paths(self.profile["id"])
+        for n, path in enumerate(snapshot_paths):
             queries["file" + str(n)] = (
                 f"if test -L {Q(path)}; then echo SYMLINK; elif test -r {Q(path)}; then sha256sum {Q(path)}; "
                 f"elif test -e {Q(path)}; then echo UNREADABLE; else echo ABSENT; fi"
@@ -608,9 +609,7 @@ class Transport:
         for name in TABLES:
             if name in blocks:
                 state[name] = decode_rows(blocks[name])
-        for path, n in zip(
-            paths(self.profile["id"]), range(len(paths(self.profile["id"])))
-        ):
+        for n, path in enumerate(snapshot_paths):
             value = blocks["file" + str(n)]
             state["files"][path] = None if value == "ABSENT" else value.split()[0]
         for line in blocks["settings"].splitlines():

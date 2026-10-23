@@ -230,6 +230,8 @@ test('scrolled tiles keep the focus-ring gutter and normal opacity; late discove
  const p=await setup({discoveryDelay:200});
  await p.evaluate(()=>localStorage.setItem('minimal-hub.shortcuts.v1',JSON.stringify({version:1,apps:window.testApps.slice(2,13)})));
  await p.reload();await p.waitForTimeout(300);await key(p,'ArrowDown','ArrowDown','ArrowDown');
+ // Edge markers update in the browser's asynchronous scroll event.
+ await p.waitForFunction(()=>document.getElementById('home-scroll').classList.contains('can-scroll-up'));
  const room=await p.evaluate(()=>document.getElementById('favorites').getBoundingClientRect().bottom-document.activeElement.getBoundingClientRect().bottom);
  assert.ok(room>=10,`focus ring gutter was ${room}px`);assert.equal(await p.locator('#home-scroll.can-scroll-up').count(),1);
  assert.ok(await p.locator('#favorites > button').evaluateAll(bs=>bs.every(b=>getComputedStyle(b).opacity==='1')));

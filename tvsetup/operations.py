@@ -440,7 +440,7 @@ class Driver:
         elif kind in ("file", "pairing", "preferences"):
             self.file_write(action, info)
         elif kind == "routes":
-            script = f"sqlite3 -bail -cmd '.timeout 2000' {CONTEXT_DB} <<'TV_SETUP_SQL'\n{route_sql(action)}TV_SETUP_SQL\ntest \"$(sqlite3 -readonly {CONTEXT_DB} 'pragma quick_check;')\" = ok\n"
+            script = f"printf %s {Q(route_sql(action))} | sqlite3 -bail -cmd '.timeout 2000' {CONTEXT_DB}\ntest \"$(sqlite3 -readonly {CONTEXT_DB} 'pragma quick_check;')\" = ok\n"
             self.tv.root(script)
             self.control_call("reload", root=True)
         elif kind == "setting":
@@ -455,7 +455,8 @@ class Driver:
             path = action.options["path"]
             text = "[Unit]\nAfter=buxton2.service systemd-udevd.service connman.service net-config.service deviced.service\n[Service]\nExecStart=/usr/bin/dotnet /opt/minimal-saver/Boot.dll\n"
             text += "#" + " " * (209 - len(text.encode()) - 2) + "\n"
-            assert len(text.encode()) == 209
+            if len(text.encode()) != 209:
+                raise Refused("S90D cache patch must be exactly 209 bytes")
             # Keep the rest of the cache byte-for-byte. Refuse any unreviewed starting hash.
             temporary = (
                 path + ".tv-setup-" + self.folder.name + "-" + action.id + ".new"
@@ -552,7 +553,7 @@ class Driver:
             self.tv.root(hash_guard(path, digest))
         if action.kind == "routes":
             self.tv.root(
-                f"sqlite3 -bail -cmd '.timeout 2000' {CONTEXT_DB} <<'TV_SETUP_SQL'\n{route_sql(action, True)}TV_SETUP_SQL\n"
+                f"printf %s {Q(route_sql(action, True))} | sqlite3 -bail -cmd '.timeout 2000' {CONTEXT_DB}\n"
             )
             self.control_call("reload", root=True)
         elif action.kind in ("file", "cache", "pairing", "preferences"):
