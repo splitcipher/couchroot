@@ -112,6 +112,8 @@ def identity_guard(profile):
         f"grep -qx {Q('Version=' + profile['firmware'] + ';')} /etc/prd_info.ini\n"
     )
     script += f'test "$(uname -m)" = {Q(profile["architecture"])}\n'
+    if "firmware_file_sha256" in profile:
+        script += hash_guard("/etc/prd_info.ini", profile["firmware_file_sha256"])
     return script
 
 
