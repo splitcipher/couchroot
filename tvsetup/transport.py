@@ -685,4 +685,7 @@ class Transport:
                     if name in ("pairing_config", "legacy_pairing_config")
                     else values[name].strip()
                 )
+        from .component_report import explain
+
+        state["cleanup_explanations"] = explain(self.profile, state)
         return state

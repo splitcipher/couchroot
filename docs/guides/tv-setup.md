@@ -553,3 +553,17 @@ Reboot verification submits one 10-second systemd timer with one-second accuracy
 the `System` SMACK label and the system kdbus address via `--setenv`. It does not use `systemctl reboot` or a shell
 background child, which the native worker correctly kills at EXEC completion.
 A lost submission reply remains uncertain and is never automatically retried.
+
+### Cleanup explanations in private snapshots
+
+`cleanup_explanations` projects the existing per-firmware allowlist and eligibility
+checks into each setup snapshot, including reviewed version and the corresponding
+model cleanup record as provenance. This is reporting only; no removal list,
+package-protection predicate or dependency check changes. Optional exported
+inspector records can be passed to `tvsetup.component_report.explain()` offline;
+their fields remain labelled recorded evidence. Setup itself does not fetch new
+process or registration data for optional apps, so those facts remain unknown.
+Disabled registration, boot policy and matching process observations are separate.
+Neither disabled flags nor an absent process proves zero telemetry. Retain the
+existing Store/verified signed-package recovery requirements for any independently
+authorized removal; report removal itself requires no device rollback.
