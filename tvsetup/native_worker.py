@@ -89,6 +89,11 @@ def build(folder, command):
         "reconcile.h",
         "fault-test.h",
         "offline-reconcile.h",
+        "mqtt/config.h",
+        "mqtt/discovery.h",
+        "mqtt/commands.h",
+        "mqtt/wire.h",
+        "mqtt/bridge.h",
     )
     inputs = [SOURCE / "native-worker" / name for name in headers] + [
         SOURCE / "native-worker/worker.c",

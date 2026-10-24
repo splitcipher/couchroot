@@ -28,6 +28,8 @@ They are not deployment instructions or acceptance of the current source.
 - [UI development](guides/ui-development.md)
 - [Couchroot command-line installer](guides/universal-installer.md)
 
+- [Home Assistant MQTT bridge](guides/mqtt.md)
+
 ## Project plans and release records
 
 - [Couchroot .NET deprecation plan](project/dotnet-deprecation-plan.md)

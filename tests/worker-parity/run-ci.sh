@@ -14,6 +14,8 @@ cc -std=c99 -O2 -Wall -Wextra -Werror -Wno-unused-function \
 cc -std=c99 -O2 -Wall -Wextra -Werror \
   agent/native-observer/process-observer.c -o /out/process-observer
 cc -shared -fPIC -Wall -Wextra -Werror tests/native-io/delay.c -ldl -o /out/io-delay.so
+cc -std=c99 -O2 -Wall -Wextra -Werror -Wno-unused-function tests/mqtt/harness.c -ldl -pthread -o /out/mqtt-harness
+export MQTT_HARNESS=/out/mqtt-harness
 export COUCHROOT_PARITY_CONTAINER=1
 export NATIVE_WORKER=/out/worker NATIVE_ACCEPT=/out/accept PROCESS_OBSERVER=/out/process-observer
 export NATIVE_WORKER_FAULT_TEST=1 NATIVE_WORKER_STORAGE_TEST=1 NATIVE_IO_DELAY=/out/io-delay.so

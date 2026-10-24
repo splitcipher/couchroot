@@ -86,6 +86,16 @@ and writes, 120 seconds for file open/commit and helper preparation. These budge
 do not extend a job's execution deadline. Held bootstrap disallows uploads and
 retains its restricted operation surface.
 
+## Optional outbound MQTT lease
+
+`OP {"op":"mqtt.start","device":...,"firmware":...,"version":...}` is an
+idempotent ten-second lease for the ready production worker only. The coordinator
+renews it through existing admission fences. The worker opens a fixed root-owned
+config path and returns only a fixed state code, never credentials. Bounded and
+held-bootstrap workers refuse it; the public HTTPS operation allowlist excludes it.
+It adds no network listener or generic MQTT-to-OP dispatch. See the
+[MQTT guide](../docs/guides/mqtt.md) for scope, recovery and acceptance limits.
+
 ## Remaining implementation differences
 
 - OP JSON: native permits 20,000 decoded bytes except `file.write`, whose envelope

@@ -147,7 +147,8 @@ jobs:
             gcc -std=c99 -O2 -Wall -Wextra -Werror -Wno-unused-function agent/native-worker/accept.c -ldl -pthread -o /out/accept
             gcc -shared -fPIC -Wall -Wextra -Werror tests/native-io/delay.c -ldl -o /out/io-delay.so
             # ARM64 parity covers mounts; extended lifetime remains a local opt-in.
-            NATIVE_WORKER=/out/worker NATIVE_WORKER_FAULT_TEST=1 COUCHROOT_PARITY_CONTAINER=1 NATIVE_ACCEPT=/out/accept NATIVE_IO_DELAY=/out/io-delay.so python3 -m unittest discover -s tests -p "native_*_test.py"
+            gcc -std=c99 -O2 -Wall -Wextra -Werror -Wno-unused-function tests/mqtt/harness.c -ldl -pthread -o /out/mqtt-harness
+            MQTT_HARNESS=/out/mqtt-harness NATIVE_WORKER=/out/worker NATIVE_WORKER_FAULT_TEST=1 COUCHROOT_PARITY_CONTAINER=1 NATIVE_ACCEPT=/out/accept NATIVE_IO_DELAY=/out/io-delay.so python3 -m unittest discover -s tests -p "native_*_test.py"
           '
   native-launcher-builds:
     runs-on: ubuntu-24.04

@@ -87,6 +87,12 @@ class NativeWorkerTests(unittest.TestCase):
         self.assertEqual((self.root/'file').read_bytes(),data)
         id=self.begin(b'replacement',expected=hashlib.sha256(data).hexdigest());self.assertTrue(self.upload(id,b'replacement')['ok']);self.assertTrue(self.op('file.commit',transfer_id=id)['ok'])
         self.assertEqual((self.root/'file').read_bytes(),b'replacement')
+    def test_mqtt_cannot_start_from_bounded_or_bootstrap_worker(self):
+        result=self.op('mqtt.start',device='qn90a',firmware='fixture',version='test')
+        self.assertFalse(result['ok'])
+        self.assertIn('production worker',result['error'])
+        self.assertTrue(self.op('status')['ok'])
+
     def test_status_confirms_original_guardian_parent(self):
         for _ in range(3):
             info=self.op('status')['result']

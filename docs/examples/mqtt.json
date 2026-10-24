@@ -1,0 +1,15 @@
+{
+  "device": "qn90a",
+  "device_name": "REPLACE_WITH_STABLE_DEVICE_NAME",
+  "broker_host": "192.0.2.24",
+  "broker_port": 1883,
+  "credentials_file": "/opt/couchroot/mqtt/credentials.env",
+  "enabled": true,
+  "state": true,
+  "control": true,
+  "events": true,
+  "notifications": true,
+  "kid_mode": false,
+  "resilience": false,
+  "telemetry_block": false
+}

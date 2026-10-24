@@ -4,9 +4,10 @@ const { read, config, atomic } = require('./policy'),
   { createAgent } = require('./agent'),
   { createApi } = require('./api');
 const { prepareWorkerState } = require('./worker-state');
+const { createMqttLifecycle } = require('./mqtt-lifecycle');
 const DATA = '/opt/usr/home/owner/apps_rw/MiniRoot01/data';
 const { createBootLaunch } = require('./policy');
-let server, agent, bootTimer;
+let server, agent, bootTimer, mqttTimer, mqtt;
 function start() {
   const c = config(JSON.parse(read(DATA + '/config.json')));
   const state = prepareWorkerState(DATA);
@@ -18,10 +19,22 @@ function start() {
     externalObserverDirectory:
       c.device === 's90d' ? state.directory : undefined,
   });
+  let packageVersion = 'unknown';
+  try {
+    const value = tizen.application.getCurrentApplication().appInfo.version;
+    if (typeof value === 'string' && value.length < 32) packageVersion = value;
+  } catch (_) {}
+  mqtt = createMqttLifecycle(agent, c, packageVersion);
+  mqttTimer = setInterval(() => {
+    mqtt.tick();
+  }, 2000);
   const boot = createBootLaunch(agent, c.boot_launcher === true);
   const originalStatus = agent.status;
   agent.status = () =>
-    Object.assign(originalStatus(), { boot_launcher: boot.status() });
+    Object.assign(originalStatus(), {
+      boot_launcher: boot.status(),
+      mqtt: mqtt.status(),
+    });
   if (c.boot_launcher === true)
     bootTimer = setInterval(() => {
       boot.tick().then(() => {
@@ -48,7 +61,7 @@ function start() {
     },
   });
   server.on('error', () => {
-    agent.stop();
+    stop();
     process.exitCode = 1;
   });
   server.listen(c.port, '0.0.0.0', () => {
@@ -56,6 +69,8 @@ function start() {
   });
 }
 function stop() {
+  if (mqttTimer) clearInterval(mqttTimer);
+  if (mqtt) mqtt.stop();
   if (bootTimer) clearInterval(bootTimer);
   if (agent) agent.stop();
   if (server) server.close();
@@ -65,6 +80,7 @@ process.on('SIGINT', stop);
 try {
   start();
 } catch (_) {
+  stop();
   console.error('Root agent configuration unavailable; service not started');
   process.exitCode = 1;
 }

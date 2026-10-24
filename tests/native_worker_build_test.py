@@ -137,6 +137,10 @@ class NativeWorkerBuildTests(unittest.TestCase):
                 result=autonomous_root.prepare('qn90a',{},sign=False,native_candidate=True)
             folder=Path(result['folder']);payload=folder/'package/payload'
             service=folder/'package/service'
+            self.assertTrue((service/'mqtt-lifecycle.js').is_file())
+            sources=json.loads((payload/'native-manifest.json').read_text())['source']
+            for name in ('config','discovery','commands','wire','bridge'):
+                self.assertIn('native-worker/mqtt/'+name+'.h',sources)
             self.assertFalse((service/'managed-return.js').exists())
             self.assertFalse((service/'managed-launch.js').exists())
             # Real packaged require graph must remain complete without fallbacks.

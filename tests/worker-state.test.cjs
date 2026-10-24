@@ -69,12 +69,13 @@ test('service startup passes private selection path and refuses legacy state bef
   const policy={read:()=>Buffer.from('{"enabled":true,"port":12345}'),config:v=>v,atomic:()=>{},Journal:class{},createBootLaunch:()=>({status:()=> 'disabled'})};
   const modules={
    './policy':policy,
+   './mqtt-lifecycle':require('../agent/service/mqtt-lifecycle'),
    './worker-state':{prepareWorkerState:input=>{assert.equal(input,'/opt/usr/home/owner/apps_rw/MiniRoot01/data');return prepareWorkerState(data);}},
    './agent':{createAgent:(_c,options)=>{calls.push(options.selectionFile);return agent;}},
    './api':{createApi:()=>server}
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../agent/service/main.js'),'utf8'),{require:n=>{assert.ok(modules[n]);return modules[n];},process:proc,console:{error:()=>calls.push('error')},setInterval,clearInterval});
   if(legacy){assert.deepEqual(calls,['error']);assert.equal(proc.exitCode,1);}
-  else assert.deepEqual(calls,[path.join(data,'worker-state','worker-selection.json'),'listen','start']);
+  else { assert.deepEqual(calls,[path.join(data,'worker-state','worker-selection.json'),'listen','start']); proc.emit('SIGTERM'); }
  });
 });
