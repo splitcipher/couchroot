@@ -206,6 +206,9 @@ class PilotDriver(Driver):
             rows = [r for r in after["packages"] if r[0] == PACKAGE]
             if len(rows) != 1 or not self.package_identity_ok(rows[0]):
                 raise Refused("Pilot registration mismatch")
+            from .service_registration import require_expected
+
+            require_expected(after)
         for field in ("key_filter", "task_filter", "managed_app"):
             if before.get(field) != after.get(field):
                 raise Refused("Production routing changed")

@@ -9,6 +9,11 @@ from unittest.mock import patch
 from tvsetup import service_registration as reg
 
 
+def expected_registration():
+    values = [reg.SERVICE, reg.PACKAGE, 'svcapp', 'false', 'true', 'true', 'false']
+    return reg.parse_capture('OK\n' + '|'.join('text|' + value.encode().hex() for value in values))
+
+
 class RegistrationTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

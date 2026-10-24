@@ -613,6 +613,9 @@ class Transport:
         for name in TABLES:
             if name in blocks:
                 state[name] = decode_rows(blocks[name])
+        state["agent_registration"]["package_installed"] = any(
+            row[0] == "MiniRoot01" for row in state.get("packages", [])
+        )
         for n, path in enumerate(snapshot_paths):
             value = blocks["file" + str(n)]
             state["files"][path] = None if value == "ABSENT" else value.split()[0]

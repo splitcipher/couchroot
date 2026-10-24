@@ -1,3 +1,4 @@
+from service_registration_test import expected_registration
 """Exercise the real journal/driver path; only signing and installation are fixtures."""
 
 import copy
@@ -102,6 +103,7 @@ class PackageRecoveryTests(unittest.TestCase):
     def state_for(self, members, version):
         files = package_files(members)
         return dict(
+            agent_registration=expected_registration(),
             files={k: files.get(k) for k in self.action.after},
             packages=[
                 [
@@ -148,6 +150,8 @@ class PackageRecoveryTests(unittest.TestCase):
             raise Refused("lost install reply")
         members, version = verified(source, {}, PACKAGE)
         self.state = self.state_for(members, version)
+        if self.failure == "flags":
+            self.state["agent_registration"]["status"] = "disabled"
         if self.failure == "drift":
             self.state["files"][PREFIX + "old.js"] = sha(b"foreign")
         if self.failure == "version":
@@ -213,6 +217,19 @@ class PackageRecoveryTests(unittest.TestCase):
         self.engine.load()
         with self.assertRaisesRegex(Refused, "registration"):
             self.engine.rollback()
+        self.assertEqual(self.installs, 1)
+
+    def test_recovery_reset_flags_remains_pending_without_reinstall(self):
+        self.failure = "flags"
+        with self.assertRaisesRegex(Refused, "startup registration"):
+            self.engine.rollback()
+        self.assertEqual(self.engine.doc['phase'], 'rollback-partial')
+        self.engine.load()
+        with self.assertRaisesRegex(Refused, "startup registration"):
+            self.engine.rollback()
+        self.assertEqual(self.installs, 1)
+        self.state['agent_registration'] = expected_registration()
+        self.assertEqual(self.engine.rollback(), [])
         self.assertEqual(self.installs, 1)
 
     def test_signer_cannot_change_recovered_payload(self):

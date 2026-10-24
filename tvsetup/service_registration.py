@@ -9,16 +9,26 @@ from .transport import PKG_DB
 
 PACKAGE = "MiniRoot01"
 SERVICE = PACKAGE + ".Service"
-COLUMNS = ("app_id", "package", "app_component", "app_disable", "app_onboot", "app_autorestart")
+COLUMNS = (
+    "app_id",
+    "package",
+    "app_component",
+    "app_disable",
+    "app_onboot",
+    "app_autorestart",
+)
 FIELDS = (*COLUMNS, "package_disable")
 
 
 def row_sql():
     columns = ["a." + c for c in COLUMNS] + ["p.package_disable"]
     # Preserve SQLite types as well as NULL; never coerce an unfamiliar flag.
-    expressions = [f"typeof({c}),CASE WHEN {c} IS NULL THEN '-' ELSE hex({c}) END" for c in columns]
+    expressions = [
+        f"typeof({c}),CASE WHEN {c} IS NULL THEN '-' ELSE hex({c}) END" for c in columns
+    ]
     return (
-        "SELECT " + ",".join(expressions)
+        "SELECT "
+        + ",".join(expressions)
         + " FROM package_app_info a JOIN package_info p ON p.package=a.package"
         + f" WHERE a.app_id='{SERVICE}' AND a.package='{PACKAGE}' LIMIT 3;"
     )
@@ -28,12 +38,13 @@ def capture_command():
     q = shlex.quote
     schema = (
         "SELECT count(*) FROM pragma_table_info('package_app_info') WHERE name IN ("
-        + ",".join("'" + c + "'" for c in COLUMNS) + ");"
+        + ",".join("'" + c + "'" for c in COLUMNS)
+        + ");"
         + "SELECT count(*) FROM pragma_table_info('package_info') WHERE name IN ('package','package_disable');"
     )
     return (
         f"if schema=$(sqlite3 -readonly {q(PKG_DB)} {q(schema)} 2>/dev/null); then\n"
-        f"if test \"$schema\" = {q('6' + chr(10) + '2')}; then\n"
+        f'if test "$schema" = {q("6" + chr(10) + "2")}; then\n'
         f"if rows=$(sqlite3 -readonly -separator '|' {q(PKG_DB)} {q(row_sql())} 2>/dev/null); then\n"
         "printf 'OK\\n%s\\n' \"$rows\"\nelse echo READ_ERROR; fi\n"
         "else echo UNSUPPORTED_SCHEMA; fi\nelse echo READ_ERROR; fi"
@@ -49,9 +60,17 @@ def _flag(value):
 
 
 def parse_capture(text):
-    result = dict(schema=1, package=PACKAGE, service=SERVICE, capture="unknown",
-                  status="unknown", reason="incomplete_capture", row=None,
-                  worker_ready="not_observed", new_boot_ready="not_observed")
+    result = dict(
+        schema=1,
+        package=PACKAGE,
+        service=SERVICE,
+        capture="unknown",
+        status="unknown",
+        reason="incomplete_capture",
+        row=None,
+        worker_ready="not_observed",
+        new_boot_ready="not_observed",
+    )
     lines = text.strip().splitlines()
     if lines == ["READ_ERROR"] or lines == ["UNSUPPORTED_SCHEMA"]:
         result.update(capture="error", reason=lines[0].lower())
@@ -69,8 +88,10 @@ def parse_capture(text):
     row = {}
     try:
         for i, field in enumerate(FIELDS):
-            kind, raw = parts[2*i:2*i+2]
-            if kind not in ("null", "text", "integer", "real", "blob") or (kind == "null" and raw != "-"):
+            kind, raw = parts[2 * i : 2 * i + 2]
+            if kind not in ("null", "text", "integer", "real", "blob") or (
+                kind == "null" and raw != "-"
+            ):
                 raise ValueError()
             value = None if kind == "null" else bytes.fromhex(raw).decode("utf-8")
             row[field] = {"type": kind, "value": value}
@@ -78,14 +99,22 @@ def parse_capture(text):
         result["reason"] = "malformed_row"
         return result
     # Do not export unexpected strings or identifiers from an untrusted row.
-    if row["app_id"] != {"type": "text", "value": SERVICE} or row["package"] != {"type": "text", "value": PACKAGE}:
+    if row["app_id"] != {"type": "text", "value": SERVICE} or row["package"] != {
+        "type": "text",
+        "value": PACKAGE,
+    }:
         result["reason"] = "identity_mismatch"
         return result
     if row["app_component"] != {"type": "text", "value": "svcapp"}:
         result["reason"] = "component_mismatch"
         return result
-    safe_row = {k: v if v["value"] in (None, "true", "false") else {"type": v["type"], "value": "[unrecognized]"}
-                for k, v in row.items() if k not in ("app_id", "package", "app_component")}
+    safe_row = {
+        k: v
+        if v["value"] in (None, "true", "false")
+        else {"type": v["type"], "value": "[unrecognized]"}
+        for k, v in row.items()
+        if k not in ("app_id", "package", "app_component")
+    }
     result["row"] = safe_row
     disabled = [_flag(row[k]) for k in ("app_disable", "package_disable")]
     flags = [_flag(row[k]) for k in ("app_onboot", "app_autorestart")]
@@ -98,3 +127,37 @@ def parse_capture(text):
     else:
         result.update(status="expected", reason="expected_startup_flags")
     return result
+
+
+def require_expected(state):
+    """Refuse readiness without fresh schema-1 evidence; never repair in a verifier."""
+    from .common import Refused
+
+    record = state.get("agent_registration")
+    if not isinstance(record, dict) or record.get("schema") != 1:
+        raise Refused(
+            "Agent startup registration unknown; fresh schema-1 readback required (retain original journal checkout)"
+        )
+    if (
+        record.get("package"),
+        record.get("service"),
+        record.get("capture"),
+        record.get("status"),
+    ) != (PACKAGE, SERVICE, "observed", "expected"):
+        raise Refused(
+            "Agent startup registration not verified; keep run pending and inspect fresh evidence; do not replay installation or automatically enable the service"
+        )
+
+
+def verify_manifest_contract(manifest):
+    """Called only after the shared verifier authenticates every package member."""
+    from .common import Refused
+
+    services = manifest.findall("{http://tizen.org/ns/widgets}service")
+    owned = [service for service in services if service.get("id") == SERVICE]
+    if len(owned) != 1 or any(
+        owned[0].get(field) != "true" for field in ("on-boot", "auto-restart")
+    ):
+        raise Refused(
+            "Signed agent startup contract differs; explicit policy review required"
+        )

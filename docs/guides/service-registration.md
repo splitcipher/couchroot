@@ -29,3 +29,26 @@ Power-loss/interrupted-update acceptance is also separate.
 Removing this observation field needs no TV rollback. Preserve private snapshots
 outside Git. No registration repair is authorized by an `unknown` or `disabled`
 result; in particular an intentionally disabled service must not be re-enabled.
+
+## Verification and recovery
+
+Agent package installation/update and signed forward recovery now require schema-1
+`expected` registration evidence in addition to existing file, identity, protection
+and preservation checks. Shared signature verification also requires the exact
+single service manifest with both startup flags true. A changed manifest policy
+requires review; it cannot silently redefine a repair target.
+
+Correct package bytes with reset or unknown flags leave the Engine run partial
+(or rollback-partial). Resume observes again and never reinstalls just to fix
+registration. Keep the prior signed recovery package and original journal and
+checkout. Engine journal schema 2 and its source-revision pin remain unchanged:
+older runs must use their original checkout; they are not silently migrated to a
+new verifier. Missing registration evidence is unknown, never grandfathered as
+successful. Rollback that actually reinstalls an agent must pass the same fresh
+check before completing. A no-op return to an already-original package is not a
+new installation or a boot-readiness claim.
+
+There is deliberately no repair command. Stop on blocked verification, inspect the
+private journal and obtain exact schema/privilege/disable-policy evidence before
+proposing a targeted repair. Do not clear pending markers, blindly replay an
+installer, restore a whole package DB, or manually open an app to claim boot success.

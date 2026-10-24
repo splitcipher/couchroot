@@ -755,6 +755,10 @@ class Driver:
             or rows[0][3] != info["forward_recovery"]["version"]
         ):
             raise Refused("Recovery registration mismatch")
+        if action.options["package"] == "MiniRoot01":
+            from .service_registration import require_expected
+
+            require_expected(state)
 
     def reinstall_recovery(self, action, info):
         if action.options["package"] in ("MiniHubBoot", "MiniTelemetry"):
