@@ -229,3 +229,45 @@ Mark every milestone as a read-only observation, owner-authorized change or not
 tested. Submit only redacted, synthetic-identity reproduction steps. Because this is a
 personal project, there is no support or response-time commitment — but a
 well-evidenced new target is genuinely useful to other owners of that TV.
+
+## Offline deeper runtime evidence
+
+`tvsetup.deep_inspection.report(envelope)` parses already supplied evidence without
+opening SDB, selecting a runtime, changing profiles or granting installation. The
+public survey remains unchanged and does not use this parser. Supply a bounded
+`listing` (at most 16 KiB), `listing_exit`, `source_revision` (40 hex characters),
+`stage`, `outcome`, optional `explicit_choice`, `active_path`, a `files` map for
+`libcoreclr.so` and `System.Private.CoreLib.dll`, and profile mismatch field names.
+The returned schema-1 record separates detected versions from an explicit choice
+and always leaves `selected_runtime` null and `install_authorized` false.
+
+Standard runtime listing and the exact unknown-option/exit-255 fallback are
+separate evidence paths. Alternate known CLR layouts are observations only.
+Malformed paths, missing libraries, unknown families, choice mismatches and
+unavailable captures produce reasons, not relaxed firmware/hash/signature guards.
+Raw output, credentials, arbitrary paths and private mismatch values are omitted.
+Record control timeout, fast rejection, callback failure and cleanup uncertainty
+at their actual stages. Root success, display control, boot persistence and
+security-policy capabilities remain independent milestones.
+
+The diagnostic pattern was compared with upstream
+[samsung-tv-root v0.0.12](https://github.com/chris-ritsen/samsung-tv-root/tree/3b97edf3762db7670585d73e29623dc56195bf98).
+This is original parsing code, not an upstream dependency refresh. Couchroot's
+pinned production transport calls `capture()`, not the upstream retried
+`require_shell_injection()` method. Its frozen Linux OpenSSL environment workaround
+has no demonstrated use in this source-toolkit path. Neither change is imported.
+
+A later live collector needs separately authorized access, exact target identity,
+fixed commands, bounded total elapsed time, provenance and staging cleanup with
+lost-response reconciliation. `archive-root probe` acquires and cleans up; it is
+not a read-only public survey. Parser removal requires no TV rollback.
+
+## Learn one ordinary app before privileged integration
+
+The original [clock and remote example](../../research/first_app/README.md) provides
+an unsigned offline first step: rendering, remote keys, pause/resume and explicit
+Back exit. Move to a disposable signed app only after reviewing identity, trust,
+physical remote/exit behavior and shared recovery. Democratizen's reported Frame
+runtime adaptation is a teaching reference, not proof of compatibility with these
+TVs. A new reconnectable terminal, PTY service or client-key-bearing package adds
+no necessary capability to this sequence and is excluded from this roadmap.

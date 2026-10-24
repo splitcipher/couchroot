@@ -7,6 +7,7 @@ from tvsetup.autonomous_root_trial import PilotTransport,PilotDriver,DATA,PREFIX
 from tvsetup.operations import observed
 from tvsetup.common import Refused,sha
 from tvsetup.planner import Action
+from service_registration_test import expected_registration
 
 class PilotTests(unittest.TestCase):
     def test_inventory_changes_require_exact_content_bound_review(self):
@@ -48,7 +49,7 @@ class PilotTests(unittest.TestCase):
         before=package_files({'old.js':b'old'});after=package_files({'new.js':b'new'})
         before,after,_=reviewed_inventory(before,after,inventory_review(before,after)['sha256'])
         action=Action('001-update','autonomous-root','package',before,after,dict(package=PACKAGE))
-        state=dict(files=before,packages=[[PACKAGE,PACKAGE+'.App','wgt','1.0.0','true','false','false','false']],developer_host='192.0.2.1')
+        state=dict(agent_registration=expected_registration(),files=before,packages=[[PACKAGE,PACKAGE+'.App','wgt','1.0.0','true','false','false','false']],developer_host='192.0.2.1')
         desired={**state,'files':after}
         with tempfile.TemporaryDirectory() as d:
             driver=PilotDriver(None,{}, {},Path(d))

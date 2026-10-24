@@ -21,10 +21,24 @@ from .registry import accepted_devices
 Q = shlex.quote
 
 
-def plan(model, boot_id, code_directory, binary_sha256, expected, target, *, tag=None):
+def plan(
+    model,
+    boot_id,
+    code_directory,
+    binary_sha256,
+    expected,
+    target,
+    *,
+    tag=None,
+    firmware=None,
+):
     if model not in accepted_devices():
         raise Refused("Unsupported native rescue model")
     safety = profile(model)
+    if firmware is not None and firmware != safety["firmware"]:
+        from .qn90a_firmware_trial import safety_profile
+
+        safety = safety_profile(model, firmware)
     tag = uuid.uuid4().hex if tag is None else tag
     if not isinstance(tag, str) or not re.fullmatch("[a-f0-9]{32}", tag):
         raise Refused("Invalid native rescue identity")
@@ -53,7 +67,7 @@ def plan(model, boot_id, code_directory, binary_sha256, expected, target, *, tag
             raise Refused("Native rescue requires canonical nonzero IPv4") from None
     if expected == target:
         raise Refused("Rescue must change the expected host")
-    return dict(
+    result = dict(
         schema=1,
         model=model,
         firmware=safety["firmware"],
@@ -66,6 +80,9 @@ def plan(model, boot_id, code_directory, binary_sha256, expected, target, *, tag
         tag=tag,
         delay_seconds=300,
     )
+    if "firmware_file_sha256" in safety:
+        result["firmware_file_sha256"] = safety["firmware_file_sha256"]
+    return result
 
 
 def validate(value):
@@ -83,6 +100,7 @@ def validate(value):
                 )
             ),
             tag=value["tag"],
+            firmware=value["firmware"],
         )
         if value != bound:
             raise Refused("Native rescue plan drift")
@@ -107,6 +125,8 @@ def commands(value):
         "grep -qx " + Q("Version=" + p["firmware"] + ";") + " /etc/prd_info.ini\n"
         'test "$(uname -m)" = ' + Q(p["architecture"]) + "\n"
     )
+    if "firmware_file_sha256" in p:
+        prefix += hash_guard("/etc/prd_info.ini", p["firmware_file_sha256"])
     guards = 'test "$(readlink -f ' + Q(code) + ')" = ' + Q(code) + "\n"
     # Every ancestor is root-owned and non-writable by group/other; never repair it.
     for path in (

@@ -12,7 +12,13 @@ test "$(cat /proc/sys/kernel/random/boot_id)" = "$boot"
 
 same_host() {
     line=$(cat "/proc/$coordinator/stat") || return 1
-    case "$line" in "$coordinator (wrt-service) "*) ;; *) return 1;; esac
+    case "$line" in
+        "$coordinator (wrt-service) "*) ;;
+        "$coordinator (MiniRoot01.Serv) "*)
+            # QN90A names its host after the app; bind the real executable too.
+            test "$(readlink "/proc/$coordinator/exe")" = /usr/bin/wrt-service || return 1;;
+        *) return 1;;
+    esac
     rest=${line##*) }
     # Split the kernel's stat fields after removing the parenthesized name.
     # shellcheck disable=SC2086
@@ -42,7 +48,12 @@ done
 test "$(cat /proc/sys/kernel/random/boot_id)" = "$boot"
 status=0
 running=$(app_launcher -r MiniRoot01.Service) || status=$?
-test "$status" -eq 1 && test "$running" = 'result: not running'
+test "$status" -eq 1
+case "$running" in
+    'result: not running'|'Failed to get filter count
+result: not running') ;;
+    *) echo 'Unexpected stopped-service status' >&2; exit 1;;
+esac
 echo SERVICE_STOPPED
 app_launcher -s MiniRoot01.Service
 echo SERVICE_START_SUBMITTED

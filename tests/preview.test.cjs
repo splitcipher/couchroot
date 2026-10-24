@@ -111,3 +111,17 @@ test('startup preference preview keeps the scroll cue when the last setting is c
     await page.close();
   }
 });
+
+test('third-party fixture retains stock favorites and saved list after failed discovery', async () => {
+  const page = await browser.newPage();
+  await page.goto(url + '/hub?scenario=third-party&reset=1&static=1');
+  await page.locator('#favorites button').nth(2).waitFor();
+  assert.equal(await page.locator('#favorites button').count(), 3);
+  const saved = await page.evaluate(() => localStorage.getItem('minimal-hub.shortcuts.v1'));
+  await page.evaluate(() => { window.discoveryFail = true; });
+  await page.locator('#edit-apps').click();
+  await page.locator('#editor-actions button').first().click();
+  await page.locator('#editor-status').filter({hasText:'Could not list'}).waitFor();
+  assert.equal(await page.evaluate(() => localStorage.getItem('minimal-hub.shortcuts.v1')), saved);
+  await page.close();
+});

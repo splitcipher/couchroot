@@ -187,6 +187,10 @@ def verify_package(path, profile, package_id):
         actual = manifest.get("package")
     if actual != package_id:
         raise Refused("Unexpected signed package identity")
+    if package_id == "MiniRoot01":
+        from .service_registration import verify_manifest_contract
+
+        verify_manifest_contract(manifest)
     return members, manifest.get("version")
 
 

@@ -73,6 +73,7 @@ function createAgent(config, options = {}) {
     attempts = 0,
     generation = 0,
     lastError = null,
+    lastAcquisitionError = null,
     identity = null,
     lastAcquired = null,
     workerReady = false,
@@ -195,6 +196,7 @@ function createAgent(config, options = {}) {
                     : 'disabled',
       attempts,
       last_error: lastError,
+      last_acquisition_error: lastAcquisitionError,
       identity,
       diagnostics: diagnostics(),
     };
@@ -537,8 +539,10 @@ function createAgent(config, options = {}) {
             : 'Launcher returned without authenticated agent'
         );
     } catch (e) {
-      if (running && gen === generation && !connected)
+      if (running && gen === generation && !connected) {
         lastError = (step + ': ' + String(e.message || e.code)).slice(0, 300);
+        lastAcquisitionError = lastError;
+      }
     } finally {
       if (gen === generation) {
         launching = false;
@@ -675,6 +679,7 @@ function createAgent(config, options = {}) {
     running = true;
     attempts = 0;
     lastError = null;
+    lastAcquisitionError = null;
     launch();
   }
   function stop() {

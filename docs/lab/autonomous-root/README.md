@@ -13,6 +13,14 @@ open. See the [current release scope](../../project/release-readiness.md) and
 Signed-package success is not proof of on-boot entitlement, Node
 runtime support, SDK admission, SMACK access or full privileged API coverage.
 
+Firmware mismatch diagnostics report the JSON-quoted expected line and observed
+`Version` lines from `/etc/prd_info.ini`. Whitespace and control characters remain
+visible; no other identity-file fields are included. Long diagnostics are marked
+`[truncated]`. The exact-match firmware guard is unchanged. Authenticated status
+retains the latest failed attempt in `last_acquisition_error` even when
+`last_error` becomes the retry-budget message. This is historical error evidence,
+not a worker-health result; an explicit new start clears it.
+
 See [persistent worker capabilities](CAPABILITIES.md) for the new transfer, job,
 app-user, result and readiness API, its CLI commands, and validation limits.
 

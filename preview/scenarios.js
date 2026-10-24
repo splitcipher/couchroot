@@ -2,6 +2,7 @@
   'use strict';
   var scenarios = {
     home: { label: 'Home · two favorites' },
+    'third-party': { label: 'Installed player · simulation', catalog: 'third-party', favorites: 'all' },
     many: { label: 'Home · full catalog', favorites: 'all' },
     compact: { label: 'Home · compact layout with clock', favorites: 'all', prefs: { 'minimal-hub.layout.v1': 'compact', 'minimal-hub.clock.v1': '12h' } },
     empty: { label: 'Home · no favorites', favorites: 'none' },

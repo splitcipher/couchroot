@@ -9,8 +9,8 @@ import threading
 import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1]/'agent/restart-service.sh'
-HOST = '''import ctypes,signal,time
-ctypes.CDLL(None).prctl(15,b'wrt-service',0,0,0)
+HOST = '''import ctypes,signal,time,os
+ctypes.CDLL(None).prctl(15,os.environ.get('TEST_HOST_NAME','wrt-service').encode(),0,0,0)
 def stop(*args):
  time.sleep(3)
  raise SystemExit()
@@ -25,6 +25,7 @@ with (p/'calls').open('a') as f:f.write(sys.argv[1]+'\\n')
 if sys.argv[1]=='-r':
  stopped=(p/'stopped').exists()
  if stopped and os.environ.get('BAD_STATUS'): print('unexpected');sys.exit(1)
+ if stopped and os.environ.get('FILTER_COUNT'): print('Failed to get filter count')
  print('result: not running' if stopped else 'result: running');sys.exit(1 if stopped else 0)
 elif sys.argv[1]=='-k':
  (p/'stopped').touch()
@@ -39,10 +40,12 @@ elif sys.argv[1]=='-s':
 
 @unittest.skipUnless(sys.platform == 'linux', 'Linux /proc process identity required')
 class ServiceRestartTests(unittest.TestCase):
+    host_name = 'wrt-service'
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.work = Path(self.temp.name)
-        self.host = subprocess.Popen([sys.executable, '-c', HOST], stdout=subprocess.PIPE, text=True)
+        self.host = subprocess.Popen([sys.executable, '-c', HOST], stdout=subprocess.PIPE, text=True,
+                                     env={**os.environ, 'TEST_HOST_NAME': self.host_name})
         self.assertEqual(self.host.stdout.readline(), 'ready\n')
         def cleanup():
             if self.host.poll() is None:self.host.kill()
@@ -76,6 +79,12 @@ class ServiceRestartTests(unittest.TestCase):
                 self.assertNotEqual(self.run_restart(**kwargs).returncode, 0)
                 self.assertFalse((self.work/'calls').exists())
 
+    def test_qn90a_filter_count_prefix_still_requires_host_exit(self):
+        result = self.run_restart(FILTER_COUNT='1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.work/'started').exists())
+        self.assertEqual((self.work/'calls').read_text(), '-r\n-k\n-r\n-s\n')
+
     def test_nonexiting_host_withholds_start_without_forced_kill(self):
         sleep = self.work/'sleep';sleep.write_text('#!/bin/sh\nexit 0\n');sleep.chmod(0o700)
         result = self.run_restart(NEVER_EXIT='1')
@@ -88,3 +97,19 @@ class ServiceRestartTests(unittest.TestCase):
         result = self.run_restart(BAD_STATUS='1')
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.work/'started').exists())
+
+
+@unittest.skipUnless(sys.platform == 'linux', 'Linux /proc process identity required')
+class Qn90aServiceRestartTests(ServiceRestartTests):
+    host_name = 'MiniRoot01.Serv'
+
+    def setUp(self):
+        super().setUp()
+        reader = self.work/'readlink'
+        reader.write_text('#!/bin/sh\nif test "${WRONG_EXECUTABLE:-0}" = 1; then echo /usr/bin/foreign; else echo /usr/bin/wrt-service; fi\n')
+        reader.chmod(0o700)
+
+    def test_qn90a_name_with_wrong_executable_never_stops_service(self):
+        result = self.run_restart(WRONG_EXECUTABLE='1')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.work/'calls').exists())

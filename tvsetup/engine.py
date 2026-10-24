@@ -199,8 +199,13 @@ class Engine:
             for row in self.doc["actions"]:
                 a = Action(**row["action"])
                 if row["phase"] == "applied":
-                    if self.value(a, self.driver.snapshot()) != a.after:
+                    current = self.driver.snapshot()
+                    if self.value(a, current) != a.after:
                         raise Refused("Previously applied action drifted: " + a.id)
+                    if a.kind == "package":
+                        # Matching bytes do not establish current service registration.
+                        # Reuse the driver contract without replaying installation.
+                        self.driver.verify(a, row["before_state"], current)
                     continue
                 if row["phase"] not in ("prepared", "backed-up"):
                     raise Refused("Reconcile incomplete action first: " + a.id)

@@ -542,7 +542,10 @@ class Transport:
         self.client.push(Path(source), PurePosixPath(target))
 
     def snapshot(self, privileged=False):
+        from .service_registration import capture_command, parse_capture
+
         queries = {
+            "agent_registration": capture_command(),
             "identity": "cat /etc/prd_info.ini; uname -m",
             "boot": "cat /proc/sys/kernel/random/boot_id",
             "uptime": "cat /proc/uptime",
@@ -603,12 +606,16 @@ class Transport:
             files={},
             settings={},
         )
+        state["agent_registration"] = parse_capture(blocks["agent_registration"])
         state["package_files"] = {
             pkg: blocks["optional_" + pkg] == "present" for pkg in optional
         }
         for name in TABLES:
             if name in blocks:
                 state[name] = decode_rows(blocks[name])
+        state["agent_registration"]["package_installed"] = any(
+            row[0] == "MiniRoot01" for row in state.get("packages", [])
+        )
         for n, path in enumerate(snapshot_paths):
             value = blocks["file" + str(n)]
             state["files"][path] = None if value == "ABSENT" else value.split()[0]
@@ -678,4 +685,7 @@ class Transport:
                     if name in ("pairing_config", "legacy_pairing_config")
                     else values[name].strip()
                 )
+        from .component_report import explain
+
+        state["cleanup_explanations"] = explain(self.profile, state)
         return state
