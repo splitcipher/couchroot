@@ -6,6 +6,7 @@ Callers own authorization, physical identity, locking, journaling and recovery.
 
 from .common import Refused
 from .config import profile
+from .transport import Transport, managed_guard, hash_guard
 
 FIRMWARE = "T-NKM2AKUC-2310.0"
 PRD_INFO_SHA256 = "3293b43134db7a5bb84fee803d4f68091c1fdb2aa3b2273b565fae12ea851db9"
@@ -41,3 +42,20 @@ def configured_trial(site):
 
     bound = configured_profile("qn90a", site)
     return {**bound, **safety_profile("qn90a", FIRMWARE)}
+
+
+def guard(value):
+    expected = safety_profile("qn90a", FIRMWARE)
+    if any(value.get(k) != expected[k] for k in (*BASELINE, "firmware_file_sha256")):
+        raise Refused("QN90A trial contract drift")
+    return managed_guard(value) + hash_guard("/etc/prd_info.ini", PRD_INFO_SHA256)
+
+
+class QualificationTransport(Transport):
+    """Use existing transport with an additional trial-only version-file pin."""
+
+    def sdk(self, script, timeout=30):
+        return super().sdk(guard(self.profile) + script, timeout=timeout)
+
+    def root(self, script, *args, **kwargs):
+        return super().root(guard(self.profile) + script, *args, **kwargs)

@@ -17,12 +17,15 @@ class FirmwareTrialTests(unittest.TestCase):
             self.assertEqual(value[key], original[key])
         self.assertEqual(value["cleanup"], {})
         self.assertEqual(set(value["capabilities"].values()), {"untested"})
-        guard = managed_guard(value)
+        guard = trial.guard(value)
         for required in (trial.FIRMWARE, trial.PRD_INFO_SHA256,
                          original["host_sha256"], original["launcher_sha256"],
                          "uname -m", "test ! -L /etc/prd_info.ini", "3.1.3"):
             self.assertIn(required, guard)
         self.assertNotIn(trial.FIRMWARE, managed_guard(original))
+        for key in (*trial.BASELINE, "firmware_file_sha256"):
+            with self.assertRaises(Refused):
+                trial.guard({**value, key: "changed"})
 
     def test_other_firmware_model_or_baseline_drift_refuses(self):
         for device, firmware in (("s90d", trial.FIRMWARE), ("qn90a", "2310"),

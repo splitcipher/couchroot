@@ -47,6 +47,7 @@ evidence referenced by the lab notes lives in [lab/inventory/](lab/inventory/).
 ## Lab: QN90A
 
 - [QN90A port and rollback](lab/devices/qn90a/README.md)
+- [QN90A 2310.0 agent recovery qualification](lab/devices/qn90a/firmware-2310-agent-trial.md)
 - [QN90A optional-app cleanup](lab/devices/qn90a/app-cleanup.md)
 - [QN90A boot performance: from ~118 s to ~10 s](lab/devices/qn90a/boot-performance.md)
 - [QN90A return after AirPlay mirroring](lab/devices/qn90a/casting.md)
