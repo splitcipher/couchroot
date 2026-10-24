@@ -89,13 +89,21 @@ function config(data) {
   return data;
 }
 function verifyFirmware(c) {
-  if (
-    !read('/etc/prd_info.ini')
-      .toString()
-      .split(/\r?\n/)
-      .includes('Version=' + c.firmware + ';')
-  )
-    throw Error('Firmware mismatch');
+  const lines = read('/etc/prd_info.ini').toString().split(/\r?\n/),
+    expected = 'Version=' + c.firmware + ';';
+  if (!lines.includes(expected)) {
+    // Preserve the exact guard; JSON quoting exposes whitespace and controls.
+    // Report only version lines, never the rest of the device identity file.
+    const observed = lines.filter((line) => /^\s*Version\s*=/i.test(line));
+    const message =
+      'Firmware mismatch in /etc/prd_info.ini: expected ' +
+      JSON.stringify(expected) +
+      '; observed ' +
+      JSON.stringify(observed);
+    throw Error(
+      message.length <= 256 ? message : message.slice(0, 240) + ' [truncated]'
+    );
+  }
 }
 function sdkRuntimeGuard(c) {
   config(c);

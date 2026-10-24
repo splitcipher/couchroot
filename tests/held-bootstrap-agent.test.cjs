@@ -1,13 +1,13 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{EventEmitter}=require('node:events'),{createRequire}=require('node:module');
 const boot='00000000-0000-0000-0000-000000000001',sha='a'.repeat(64),id='b'.repeat(32),flush=()=>new Promise(r=>setImmediate(r));
-for(const outcome of ['retired','uncertain','stopped','missing-acquisition','firmware-denied','recovery','recovery-uncertain'])test('native bootstrap handoff keeps admission held through '+outcome,async()=>{
+for(const outcome of ['retired','uncertain','stopped','missing-acquisition','firmware-denied','firmware-denied-exhausted','recovery','recovery-uncertain'])test('native bootstrap handoff keeps admission held through '+outcome,async()=>{
  const recovering=outcome.startsWith('recovery');
  const source=path.resolve(__dirname,'../agent/service/agent.js'),real=createRequire(source),channels=[];
  const held={implementation:'native-bootstrap',boot_id:boot,uptime_seconds:1,worker_id:'c'.repeat(32),lifetime_mode:'held-bootstrap',lifetime_seconds:300,guardian_pid:20,processes:{worker:{pid:21,start_ticks:'10'},guardian:{pid:20,start_ticks:'9'}},app_launcher:{sha256:sha,independently_staged:true},resources:{schema:1,scope:'worker-owned',jobs:[],helpers:[],transfers:[]},capabilities:['held-bootstrap-v1','resource-inventory-v1','worker-process-identity-v1','guardian-parent-identity-v1']};
  if(outcome==='managed-fallback'||recovering)Object.assign(held,{implementation:'managed',capabilities:['file-transfer-v1','binary-download-v1','binary-upload-v1','jobs-v1','app-profile-v1','helper-view-v1','native-app-launcher-v1','resource-inventory-v1','worker-process-identity-v1'],app_launcher:{sha256:sha,implementation:'native'},processes:{worker:{pid:21,start_ticks:'10'},guardian:null}});
  const selected={phase:'stable',selected_implementation:'native-prototype',selected_manifest_sha256:sha,launch_allowed:false,history:[{id,outcome:'committed',readiness_sha256:sha,to:{implementation:'native-prototype',manifest_sha256:sha}}]};
- let finish,retiring=false,submitted=0;
+ let finish,retiring=false,submitted=0;const timers=[];
  class Channel{
   constructor(options){this.options=options;this._server=new EventEmitter();this._conn=null;channels.push(this);}
   start(cb){cb();}listeningPort(){return 12345;}
@@ -27,9 +27,18 @@ for(const outcome of ['retired','uncertain','stopped','missing-acquisition','fir
   './bootstrap-recovery':{recoveryCandidate:()=>recovering?{id}:null,recoveryCommand:r=>{assert.equal(r.id,id);return 'fixed fenced cleanup';},completeAcquisitionRecovery:(file,r,bootId,output)=>{assert.equal(r.id,id);assert.equal(bootId,boot);assert.equal(output,'BOOTSTRAP-RECONCILED\n');retiring=true;}},
   './held-bootstrap':{...real('./held-bootstrap'),prepareBootstrap:()=>({record:{id,launcher_sha256:sha},command:'true\n'}),bindBootstrap:async r=>r,retireBootstrap:async(r,owner)=>{retiring=true;owner.close();await new Promise((yes,no)=>{finish=outcome==='uncertain'?()=>no(Error('cleanup unconfirmed')):yes;});}}
  };
- const module={exports:{}};vm.runInNewContext(fs.readFileSync(source,'utf8'),{module,exports:module.exports,__dirname:path.dirname(source),process,Buffer,setTimeout:()=>0,clearTimeout:()=>{},require:n=>modules[n]||real(n)});
- const agent=module.exports.createAgent({device:'qn90a',...(outcome==='managed-fallback'?{service_acquisition:'managed'}:{})},{selectionFile:'/private/selection.json',verifyFirmware:()=>{if(outcome==='firmware-denied')throw Error('EACCES fixture runtime');},readBootId:()=>boot});agent.start();
+ const module={exports:{}};vm.runInNewContext(fs.readFileSync(source,'utf8'),{module,exports:module.exports,__dirname:path.dirname(source),process,Buffer,setTimeout:fn=>{if(outcome==='firmware-denied-exhausted'){timers.push(fn);return timers.length;}return 0;},clearTimeout:()=>{},require:n=>modules[n]||real(n)});
+ const agent=module.exports.createAgent({device:'qn90a',...(outcome==='managed-fallback'?{service_acquisition:'managed'}:{})},{selectionFile:'/private/selection.json',verifyFirmware:()=>{if(outcome==='firmware-denied')throw Error('EACCES fixture runtime');if(outcome==='firmware-denied-exhausted')throw Error('Firmware mismatch in /etc/prd_info.ini: expected \"Version=T-EXAMPLE-1.0;\"; observed [\"Version=T-EXAMPLE-2.0;\"]');},readBootId:()=>boot});agent.start();
  try{
+  if(outcome==='firmware-denied-exhausted'){
+   for(let attempt=1;attempt<=8;attempt++){
+    await flush();assert.equal(agent.status().attempts,attempt);assert.equal(submitted,0);
+    assert.match(agent.status().last_acquisition_error,/expected "Version=T-EXAMPLE-1.0;"; observed \["Version=T-EXAMPLE-2.0;"\]/);
+    if(attempt<8){assert.equal(timers.length,1);timers.shift()();}
+   }
+   assert.equal(timers.length,0);assert.match(agent.status().last_error,/retry budget exhausted/);
+   assert.equal(agent.status().worker_ready,false);await assert.rejects(agent.execute('must not run',1000));return;
+  }
   if(recovering){for(let n=0;n<20;n++)await flush();assert.equal(submitted,1);assert.equal(retiring,outcome==='recovery');assert.equal(agent.status().worker_ready,false);assert.equal(agent.restartInventory().bootstrap_recovery.phase,outcome==='recovery'?'complete':'acquiring');await assert.rejects(agent.execute('must not run',1000));return;}
 
   if(['missing-acquisition','firmware-denied'].includes(outcome)){for(let n=0;n<20;n++)await flush();assert.equal(submitted,0);assert.equal(agent.status().worker_ready,false);assert.match(agent.status().last_error,outcome==='firmware-denied'?/firmware verification: EACCES/:/Native acquisition package required/);await assert.rejects(agent.execute('must not run',1000));return;}
