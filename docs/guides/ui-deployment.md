@@ -51,6 +51,16 @@ bin/deploy-ui apply --device qn90a --launch --dry-run
 prove that a deployment would succeed. `--json` supports machine-readable setup
 summaries; test output goes to stderr. Mutating JSON calls require `--yes`.
 
+During a separately authorized temporary SDK-host maintenance window, Samsung's
+HTTP `developerIP` field can still report the prior address. Set
+`TV_SETUP_LIVE_SDK_HOST=1` for the deployment commands to require exact live
+`vconftool` readback through a connected SDK session instead. This does not change
+the setting, enable Developer Mode or relax model, physical identity, firmware,
+hash or signing checks. Missing, mismatched, failed or incomplete SDK readback
+stops the operation. Arrange and journal the host transition and restoration
+separately; restore the original value on completion or abort. Omit the variable
+outside that window. The default HTTP admission check remains unchanged.
+
 ## Recovery
 
 The summary gives a run ID. Logs and signed packages stay under

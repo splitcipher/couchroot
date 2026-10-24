@@ -86,6 +86,23 @@ def identity_refusal(message, fields):
         ],
     )
 
+def verify_live_sdk_host(host, callback):
+    """Confirm live admission during an explicitly authorized maintenance window."""
+    client = SdbClient(ROOT / "bin/sdb", host)
+    client.connect()
+    client.require_device()
+    result = client.capture(
+        "vconftool get db/sdk/develop/ip",
+        callback_host=callback,
+        bind_host=callback,
+        timeout=10,
+    )
+    expected = "db/sdk/develop/ip, value = " + callback + " (String)"
+    if result.transport_returncode not in (0, 1) or not re.fullmatch(
+        re.escape(expected) + r"\r?\n(?:\r?\n)?\[exit:0\]\s*", result.output
+    ):
+        raise RuntimeError("Live Developer Mode host is unavailable or differs from this computer; stop maintenance")
+
 def device(config):
     host = config["tv_host"]
     try:
@@ -117,7 +134,12 @@ def device(config):
     callback = route_callback_host(host)
     if str(data.get("developerMode")) != "1":
         raise RuntimeError("Enable Developer Mode on the TV before shell diagnostics")
-    if data.get("developerIP") != callback:
+    if os.environ.get("TV_SETUP_LIVE_SDK_HOST") == "1":
+        # HTTP developerIP is cached on these TVs after a runtime host change.
+        # Opt-in replaces that one observation with exact live SDK readback;
+        # model, physical identity, Developer Mode and later firmware guards stay.
+        verify_live_sdk_host(host, callback)
+    elif data.get("developerIP") != callback:
         raise RuntimeError(
             "Developer Mode host must match this Mac's routed address: " + callback
         )
