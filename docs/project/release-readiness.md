@@ -7,14 +7,14 @@
 > remain recovery context, not a new installation plan. WebView is the experimental
 > native option and still requires fresh hardware acceptance.
 
-# Current acceptance — 2026-10-21
+# Current acceptance — 2026-10-24
 
 | Component / workflow | Recorded hardware result | Still open |
 | --- | --- | --- |
 | Signed web Hub and shared telemetry | Hub/service updates and reboot startup verified on both reviewed TV profiles in the recorded rollout | Fresh-user enrollment and full setup/recovery matrix |
 | Privileged setup staging (#31) | Validated on QN90A and S90D | Broader interruption/failure scenarios remain separate |
 | S90D native agent 0.7.54 (#33) | Forward/reverse handoffs, root command/job, retained-job preservation, native gate and unattended reboot passed | Interrupted-upgrade fault injection and physical UI/standby/endurance checks |
-| Latest QN90A native-agent upgrade | Earlier native trials and readiness observations retained | Package update, handoffs and reboot acceptance of the latest release |
+| QN90A native agent 0.7.54 on exact 2310.0 | Guarded recovery, verified native executable, root command/job, retained-job preservation and owner-confirmed unattended reboot passed; see [qualification record](../lab/devices/qn90a/firmware-2310-agent-trial.md) | Standby, AC-power loss, physical Home/fallback, full setup/cleanup and interrupted-upgrade acceptance; ordinary setup profile remains 2301.1 |
 | QN90A WebView launcher | Experimental; prior measurements are revision-specific | Fresh hardware acceptance |
 
 The S90D final reboot verified the actual native executable hash, stable selection,
@@ -27,10 +27,14 @@ recovery field/file retained. Private evidence stays outside Git.
 **Known installation gap:** the S90D service registration had on-boot and
 auto-restart disabled despite the signed manifest. A separately approved correction
 with a database backup and inverse script preceded successful reboot acceptance.
-The updater does not yet prevent this flag reset. Verify registration after each
-agent package update; do not declare unattended startup ready until a new-boot
-check passes. Track a guarded installer check/correction with regression tests as
-a follow-up; never blindly restore a whole package database.
+The installer and recovery verifier now inspect the exact owned registration
+and refuse completion if required startup flags or enabled state are wrong.
+They do not automatically repair registration or prevent the package manager
+from resetting it. Verify registration after each agent package update; do not
+declare unattended startup ready until a new-boot check passes. A guarded
+correction remains an offline prototype requiring separate hardware acceptance;
+never blindly restore a whole package database. See the
+[registration guide](../guides/service-registration.md).
 
 A successful reverse native handoff and an observed automatic SDK-host restore
 are not hardware proof of interrupted-upgrade recovery. That path has local test

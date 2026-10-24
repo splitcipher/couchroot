@@ -21,8 +21,17 @@ from .registry import accepted_devices
 Q = shlex.quote
 
 
-def plan(model, boot_id, code_directory, binary_sha256, expected, target, *, tag=None,
-         firmware=None):
+def plan(
+    model,
+    boot_id,
+    code_directory,
+    binary_sha256,
+    expected,
+    target,
+    *,
+    tag=None,
+    firmware=None,
+):
     if model not in accepted_devices():
         raise Refused("Unsupported native rescue model")
     safety = profile(model)
