@@ -91,3 +91,26 @@ the separate Linux service-restart suite passed all 11 tests. This includes
 firmware/profile drift refusal, immutable baseline guard checks, rescue binding
 and lost-reply/no-replay coverage, and real delayed-exit process tests. Mocked
 failure and recovery coverage is not a physical interruption or reboot test.
+
+## Separate reboot acceptance, 2026-10-24
+
+After explicit owner authorization, one software reboot passed on exact 2310.0.
+The boot ID changed; current-boot native logs recorded first render at 18.901
+seconds and Home-grab readiness at 18.971 seconds, including painted UI and
+window focus. The owner separately confirmed that Hub appeared automatically.
+Neither Hub nor the agent was manually launched during observation.
+
+The enrolled service reacquired root on its first attempt. The actual running
+worker retained the c82a7f37… digest above, remained ready during the stability
+window, and passed a separate root command and bounded persistent job. Three
+earlier terminal job records, enabled 2310 configuration, credential pins,
+protected Hub assets/routing settings, startup registration and recovery
+backup/helper hashes were preserved. Loopback remained configured, the previous
+worker review passed, and no setup or native lifecycle operation remained pending.
+No installation, repair, SDK-host change or second reboot was needed.
+
+This closes unattended Hub/new-worker startup acceptance for this one exact
+TV/firmware combination. It does not qualify AC-power loss, standby, physical
+Home/fallback interaction, full setup/cleanup or other firmware. Retain the same
+source checkout, signed packages, disabled enrollment and configuration journal
+for recovery; the earlier 2301.1-pin failure remains a separate failed observation.
