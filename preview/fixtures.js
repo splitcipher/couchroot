@@ -6,6 +6,10 @@
       { id: 'kIciSQlYEM.plex', name: 'Plex', show: true },
       { id: '9Ur5IzDKqV.TizenYouTube', name: 'YouTube', show: true }
     ];
+    if (kind === 'third-party') {
+      apps.push({ id: 'xvvl3S1TT1.TizenTubeStandalone', packageId: 'xvvl3S1TT1', name: 'TizenTube (simulation)', show: true, iconPath: '' });
+      return apps;
+    }
     if (kind === 'test') {
       for (var i = 0; i < 12; i++) apps.push({ id: 'Store00001.app' + i, name: 'App ' + String(i).padStart(2, '0'), show: true, iconPath: '' });
     } else {

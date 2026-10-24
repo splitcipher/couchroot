@@ -8,6 +8,7 @@ They are not deployment instructions or acceptance of the current source.
 ## Guides
 
 - [Administration service registration](guides/service-registration.md)
+- [Optional installed players](guides/optional-players.md)
 
 - [Choosing a launcher](guides/choosing-a-launcher.md)
 - [UI design rules](guides/design-guidelines.md)

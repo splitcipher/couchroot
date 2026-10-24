@@ -14,6 +14,8 @@
     // This TV marks hundreds of internal tools show=true. Store-package IDs
     // identify installable app entries; native consumer apps use explicit IDs.
     var nativeApps = ['org.tizen.netflix-app', 'org.tizen.primevideo', 'org.tizen.browser', 'com.samsung.tv.tvplus'];
+    if (!app || typeof app.id !== 'string' ||
+        (app.packageId && typeof app.packageId !== 'string')) { return false; }
     var pkg = app.packageId || app.id.split('.')[0];
     return app.show === true && (/^[A-Za-z0-9]{10}$/.test(pkg) || nativeApps.indexOf(app.id) >= 0);
   }
@@ -68,7 +70,7 @@
           platform.application.getAppsInfo(function (list) {
             var seen = Object.create(null);
             var found = list.filter(function (app) {
-              if (!app.id || !eligible(app) || !app.name || app.id === 'MiniHub001.Hub' || app.id === apps.home.id || seen[app.id]) { return false; }
+              if (!app || !eligible(app) || typeof app.name !== 'string' || !app.name || app.id === 'MiniHub001.Hub' || app.id === apps.home.id || seen[app.id]) { return false; }
               seen[app.id] = true; return /^[A-Za-z0-9_.-]{1,256}$/.test(app.id);
             }).map(function (app) { return { id: app.id, name: app.name, icon: localIcon(app.iconPath) }; });
             found.sort(function (a, b) { return a.name.localeCompare(b.name) || a.id.localeCompare(b.id); });
