@@ -50,3 +50,44 @@ Hardware results are recorded separately after execution. A working manually
 restarted worker does not qualify unattended boot, standby, package installation,
 full setup, cleanup or Samsung Home behavior. Reboot acceptance requires its own
 owner-authorized observation with a new boot ID and independent Hub confirmation.
+
+## Owner-authorized result, 2026-10-24
+
+The bounded temporary-root acquisition passed, including original-resource and
+cleanup checks. The shared engine backed up and changed only the disabled agent
+configuration's firmware field; existing credential bytes and signed 0.7.54
+package content remained unchanged. No package was signed or installed.
+
+The coordinator was stopped once through the guarded root transport. QN90A's
+existing auto-restart produced a new authenticated host. The manual restart
+script conservatively withheld its own start when process identity became
+unreadable during exit; later inspection proved the old host absent and the new
+host running the expected executable with the disabled configuration. SDK-only
+inspection cannot read that executable link. A transient-service invocation also
+required literal script transport to avoid systemd expanding shell variables;
+the failed guard-only attempts were inspected and were not blindly replayed.
+
+The retained native recovery helper restored loopback under exact firmware,
+version-file, boot, ownership and executable guards, with an independent timed
+external-SDK rescue armed. The enrolled service then reacquired the selected
+native worker. Its actual running executable was verified as
+`c82a7f37497a69a407e0fa5c99b09c454bb3e0dcc31a45a1c2994fcb68532ca5`.
+A bounded root job completed successfully; two earlier durable job records,
+selection, credential pins, protected Hub assets and inspected routing settings
+were unchanged. Service startup registration remained expected. The previous
+worker review and retained backup/helper hashes passed. The rescue was retired
+unfired, all owned maintenance units were retired, and the same worker remained
+ready with no pending native lifecycle operation or setup run.
+
+This qualifies the existing agent's same-boot recovery on this exact 2310.0 TV.
+No reboot was submitted during qualification. Unattended worker startup after
+reboot, standby, full setup and physical Home/fallback acceptance remain separate
+gates. The original 2301.1 registry profile deliberately still refuses 2310.0;
+future maintenance must use the explicit trial contract and retained recovery
+records rather than changing private site safety fields.
+
+Offline validation: 614 Python tests passed, 237 platform/opt-in tests skipped;
+the separate Linux service-restart suite passed all 11 tests. This includes
+firmware/profile drift refusal, immutable baseline guard checks, rescue binding
+and lost-reply/no-replay coverage, and real delayed-exit process tests. Mocked
+failure and recovery coverage is not a physical interruption or reboot test.
