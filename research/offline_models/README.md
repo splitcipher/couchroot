@@ -43,3 +43,35 @@ select input/app early/mid/late, observe the whole launch deadline, and repeat
 standby and explicit Home. Require zero delayed takeover after selection.
 Rollback would disable the optional agent boot launch or restore the exact prior
 signed helper/package with the existing Home route; retain its prior image first.
+
+## Saver backend ownership
+
+`saver.py` builds an explicitly experimental synthetic plan and exercises the real
+Engine intent/backup/apply/reconcile/rollback journal with a fake mount driver.
+It models exactly one stock/native/web backend, hash-bound 209-byte cache-prefix
+replacement with unchanged suffix, a synthetic XML selector and a signed-app
+presence prerequisite. It preserves splash/telemetry state. Wrong namespace,
+missing app, malformed selector and foreign/dual overlays refuse admission.
+Partial remount and failed unmount retain recovery state; rollback only accepts
+exact owned intermediate states. No real profile or helper hashes are admitted.
+
+For the future web backend the explicit proposed policy is: diagnostic failure
+suppresses custom rendering. This does not change the current native helper,
+which still attempts Apply after a diagnostic exception. Keep the existing native
+backend as default. Integrate any eventual renderer into the combined helper
+built by `native/s90d-splash/build-helper.py`, retaining Splash.Start/Finish and
+original diagnostics; do not install a second Boot.dll, enabled marker or AT-HUB
+hook. Use the existing S90D checkpoint and shared Engine recovery machinery.
+
+5B live helper/package work remains blocked on exact enrolled-region selector,
+cache/table and namespace evidence, underlying stock hashes captured without
+unmounting unknown overlays, signed app identity/availability, and a reviewed
+backend policy. Brazilian cache bytes and layout similarity are not admission.
+The existing QN90A web renderer is a source candidate, not an S90D idle contract.
+Before support, test idle entry from Hub/streaming/powered input, key dismissal to
+the correct prior owner, audio, standby/new boot, missing app/signature/update,
+and measured startup/RSS/CPU versus the native baseline. A black animation deadline
+must be tested separately from application exit and panel power; it is not an OLED
+panel-care guarantee. Roll back the owned selector before removing the saver app,
+restore prior helper/backend and verify restoration on a new boot. Retain SDK
+rescue and offline checkpoints. No vendor bytes or character artwork are included.
