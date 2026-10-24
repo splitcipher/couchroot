@@ -75,3 +75,23 @@ must be tested separately from application exit and panel power; it is not an OL
 panel-care guarantee. Roll back the owned selector before removing the saver app,
 restore prior helper/backend and verify restoration on a new boot. Retain SDK
 rescue and offline checkpoints. No vendor bytes or character artwork are included.
+
+## Display and source evidence
+
+`capabilities.py` projects supplied introspection XML into firmware/interface/method
+and exact input/output signature strings. It does not validate signature semantics,
+units, range, source applicability or restore behavior. Every control admission
+is false. No D-Bus call, setter, panel-care or service-menu operation exists.
+A future write requires explicit per-control admission and read/compare/write/read
+with exact prior source/value recovery, plus physical image/source-mode acceptance.
+Do not copy an upstream predicate that gates only some controls.
+
+The source parser covers bounded public-API-shaped connector records, disconnected
+and multiple sources, and refuses unknown/duplicate entries. Native source IDs are
+a different contract. Empty inventories do not prove HDMI unsupported; connected
+connectors do not prove video or native full-screen handoff. HDMI shortcut work
+remains deferred until a powered source establishes connector identity, focus,
+audio/HDR/game-mode, Home and standby recovery. Retain Samsung Home for inputs.
+Rollback would restore the prior source and remove only owned shortcut preferences.
+Removing either offline report has no TV rollback cost. This original code copies
+no Vetro parser or settings data.
