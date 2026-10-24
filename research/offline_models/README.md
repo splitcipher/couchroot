@@ -95,3 +95,22 @@ audio/HDR/game-mode, Home and standby recovery. Retain Samsung Home for inputs.
 Rollback would restore the prior source and remove only owned shortcut preferences.
 Removing either offline report has no TV rollback cost. This original code copies
 no Vetro parser or settings data.
+
+## Offline phone report (optional prototype)
+
+`phone_report.render(document)` renders a static phone-sized page from an existing
+redacted `device-report.json` schema-1 export. It strictly projects date,
+model/platform and milestone categories; raw evidence, private journals, arbitrary
+URLs and credentials are not accepted as display fields. Save output privately
+outside Git and open locally. No server, JavaScript, request, live command channel,
+trust change or privileged TV process exists. Its timestamp is the export date,
+not proof of freshness; recorded categories are not successful acceptance.
+
+Live companion, external catalogs and on-TV signing remain deferred. A future
+host gateway must keep the enrolled private key server-side, project narrow
+read-only data, and have reviewed short-lived pairing, same-origin sessions,
+revocation, hostile Origin/Host and CSRF/replay controls, redaction and maintenance
+serialization tests. Do not remove the agent's Origin rejection or export its
+client key to a browser. Actual handset trust/usability/load acceptance is separate.
+A live rollback revokes sessions/credentials and stops the gateway; deleting this
+static report needs no TV action. No Homebrew GPL implementation is copied.
