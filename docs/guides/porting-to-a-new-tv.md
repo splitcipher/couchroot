@@ -261,3 +261,13 @@ A later live collector needs separately authorized access, exact target identity
 fixed commands, bounded total elapsed time, provenance and staging cleanup with
 lost-response reconciliation. `archive-root probe` acquires and cleans up; it is
 not a read-only public survey. Parser removal requires no TV rollback.
+
+## Learn one ordinary app before privileged integration
+
+The original [clock and remote example](../../research/first_app/README.md) provides
+an unsigned offline first step: rendering, remote keys, pause/resume and explicit
+Back exit. Move to a disposable signed app only after reviewing identity, trust,
+physical remote/exit behavior and shared recovery. Democratizen's reported Frame
+runtime adaptation is a teaching reference, not proof of compatibility with these
+TVs. A new reconnectable terminal, PTY service or client-key-bearing package adds
+no necessary capability to this sequence and is excluded from this roadmap.

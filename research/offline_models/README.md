@@ -114,3 +114,34 @@ serialization tests. Do not remove the agent's Origin rejection or export its
 client key to a browser. Actual handset trust/usability/load acceptance is separate.
 A live rollback revokes sessions/credentials and stops the gateway; deleting this
 static report needs no TV action. No Homebrew GPL implementation is copied.
+
+## Deferred features and rejected expansions
+
+- **Recents:** defer until requested. Use a separate versioned, bounded key for
+  successful current Hub launch requests; deduplicate, tolerate storage failure,
+  and prune missing apps only after successful discovery. Callback acceptance is
+  not viewing history. Require remote focus, empty/uninstalled states, stale
+  callback and navigation tests. Rollback removes only that new key; favorites,
+  start-selection keys, Back and Samsung Home remain intact. No system-history
+  collector or webOS recent-service transplant.
+- **Launch on agent-page entry:** defer until a demonstrated need survives lifecycle
+  review. Any later fallback only starts the existing service with bounded attempts
+  and existing acquisition ownership; preserve pending native/setup fences. It
+  never establishes unattended boot. No second retry or acquisition loop.
+- **External catalogs/acquisition:** defer pending immutable digest, expected
+  package/app/version, privileges, signature-author continuity, target compatibility,
+  serialized maintenance and signed prior-package recovery. Use existing setup and
+  signing custody; mutable URLs and release announcements are not authorization.
+- **Alternative player:** retain tizen-youtube as an equal comparison arm in the
+  [player matrix](../../docs/guides/optional-players.md), not a performance claim.
+  Hardware playback/casting/network tests cannot be completed offline.
+- **Root transport refresh:** no demonstrated production caller benefits from the
+  upstream timing retry; frozen-binary OpenSSL changes do not apply. Reconsider only
+  with a reproduced current-path failure, bounded total deadline and unchanged
+  firmware/architecture/hash/signature/callback guards.
+- **New terminal and broad webOS rooting:** rejected. A second credential/service
+  lifecycle does not solve the prioritized gaps. No pinned webOS exploit establishes
+  Samsung support, so no firmware/profile admission follows from those reports.
+
+Every experiment above is independent of actual TV/NAS access. No local success
+here upgrades a supported profile or substitutes for physical acceptance.
