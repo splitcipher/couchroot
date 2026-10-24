@@ -23,3 +23,23 @@ interlocks for a future action; this scratch journal is not a parallel installer
 Need owner-authorized repair and inverse on both firmwares, update and new boot
 readback, worker authentication, retained jobs and SDK rescue. An inverse must
 refuse drift. Keep full backups as evidence, not routine DB restoration.
+
+## Delayed startup cancellation
+
+`startup.py` makes source, owner, selection generation and boot generation separate
+from foreground app ID. It admits a known default viewer, cancels permanently on
+changed/unknown evidence, rechecks before submitting, fences old callbacks and
+claims once per boot across service restarts. It provides no Samsung adapter:
+`viewer`, `tv`, `hdmi1`, owner and generation are synthetic contract values.
+
+Production QN90A relay Tick and optional agent policy already cancel on other apps,
+power and deadlines; the WebView host already checks source/owner during handoff.
+The compiled production relay tests remain useful for these real predicates but
+cannot establish input choice from the same `org.tizen.tv-viewer` ID. No blanket
+viewer suppression, new source setter, S90D boot route or replacement launcher is
+introduced. The firmware source/owner generation adapter and live 3B fix are gated
+on authoritative semantics. Capture normal/background boots with a powered source,
+select input/app early/mid/late, observe the whole launch deadline, and repeat
+standby and explicit Home. Require zero delayed takeover after selection.
+Rollback would disable the optional agent boot launch or restore the exact prior
+signed helper/package with the existing Home route; retain its prior image first.
