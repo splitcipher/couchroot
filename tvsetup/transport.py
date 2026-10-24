@@ -542,7 +542,10 @@ class Transport:
         self.client.push(Path(source), PurePosixPath(target))
 
     def snapshot(self, privileged=False):
+        from .service_registration import capture_command, parse_capture
+
         queries = {
+            "agent_registration": capture_command(),
             "identity": "cat /etc/prd_info.ini; uname -m",
             "boot": "cat /proc/sys/kernel/random/boot_id",
             "uptime": "cat /proc/uptime",
@@ -603,6 +606,7 @@ class Transport:
             files={},
             settings={},
         )
+        state["agent_registration"] = parse_capture(blocks["agent_registration"])
         state["package_files"] = {
             pkg: blocks["optional_" + pkg] == "present" for pkg in optional
         }
