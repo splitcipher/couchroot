@@ -35,12 +35,14 @@ static const struct {
      "firmware_update_pending", NULL, NULL, 1},
     {"root_ok", "binary_sensor", "Root OK", "root_ok", NULL, NULL, 1},
     {"screen_message", "notify", "Screen message", NULL, "notify", NULL, 0}};
-static J *mqtt_discovery(const MqttConfig *c) {
+static J *mqtt_discovery(const MqttConfig *c, J *features) {
   J *d = obj(), *dev = obj(), *origin = obj(), *components = obj();
   char value[512], base[48];
   snprintf(base, sizeof base, "tv/%s", c->device);
   snprintf(value, sizeof value, "tv_%s", c->device);
-  str(dev, "identifiers", value);
+  J *identifiers = json_object_new_array();
+  json_object_array_add(identifiers, json_object_new_string(value));
+  json_object_object_add(dev, "identifiers", identifiers);
   str(dev, "name", c->name);
   str(dev, "manufacturer", "Samsung");
   str(dev, "model", !strcmp(c->device, "qn90a") ? "QN90A" : "S90D");
@@ -61,10 +63,11 @@ static J *mqtt_discovery(const MqttConfig *c) {
     str(e, "unique_id", value);
     if (mqtt_entities[i].diagnostic)
       str(e, "entity_category", "diagnostic");
-    /* Feature 1 has no TV control/state adapters. Never advertise unsupported
-     * operations as available. Later features replace this explicit gate. */
+    /* Measurement support never enables a control. Feature 3 owns setters. */
     int available = !strcmp(key, "firmware") || !strcmp(key, "uptime") ||
-                    !strcmp(key, "root_ok");
+                    !strcmp(key, "root_ok") ||
+                    (c->state && !mqtt_entities[i].command && features &&
+                     json_object_get_boolean(get(features, key)));
     snprintf(value, sizeof value, "%s/%s", base,
              available ? "availability" : "unsupported");
     str(e, "availability_topic", value);
@@ -97,8 +100,23 @@ static J *mqtt_discovery(const MqttConfig *c) {
     } else if (!strcmp(p, "binary_sensor")) {
       str(e, "payload_on", "True");
       str(e, "payload_off", "False");
+      if (!strcmp(key, "root_ok")) {
+        str(e, "value_template", "{{ 'ON' if value_json.root_ok else 'OFF' }}");
+        str(e, "payload_on", "ON");
+        str(e, "payload_off", "OFF");
+      }
     } else if (!strcmp(p, "select")) {
-      json_object_object_add(e, "options", json_object_new_array());
+      J *options = features ? get(features, !strcmp(key, "app_select") ? "apps"
+                                            : !strcmp(key, "source") ? "sources"
+                                                                     : "")
+                            : NULL;
+      J *copy = json_object_new_array();
+      if (options && json_object_is_type(options, 5))
+        for (size_t k = 0; k < json_object_array_length(options); k++)
+          json_object_array_add(copy,
+                                json_object_new_string(json_object_get_string(
+                                    json_object_array_get_idx(options, k))));
+      json_object_object_add(e, "options", copy);
       const char *field = !strcmp(key, "source")         ? "input"
                           : !strcmp(key, "app_select")   ? "name"
                           : !strcmp(key, "picture_mode") ? "mode"

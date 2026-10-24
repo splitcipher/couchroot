@@ -1,9 +1,11 @@
-# Home Assistant MQTT bridge — feature 1
+# Home Assistant MQTT bridge — features 1–2
 
 This increment implements outbound MQTT and discovery in the existing native
 worker. It is source-only and has **not been deployed or accepted on a TV**.
-Stop here for review before feature 2 (accurate state adapters). No broker, Home
-Assistant, router or telemetry configuration is changed by this implementation.
+Feature 1 received HA-side review without deployment. Feature 2 adds measured
+state and explicitly gated remaining adapters; see the
+[state/qualification guide](mqtt-state.md). Stop at this boundary before controls.
+No broker, Home Assistant, router or telemetry configuration is changed.
 
 The signed JS coordinator renews an authenticated `mqtt.start` lease every two
 seconds only after native readiness, with no maintenance/upgrade hold. The worker
@@ -47,9 +49,9 @@ Do not reuse these credentials for other services. A worker restart is required
 after a config/credential change; no MQTT command can reconfigure the connection.
 
 `enabled` defaults true **only when a valid configuration is present**. Feature
-flags `state`, `control`, `events`, `notifications` default true as rollout intent;
-in this increment they cannot enable adapters that do not yet exist. Setting them
-false also leaves those features unavailable. `kid_mode`, `resilience` and
+flag `state` defaults true and gates the feature-2 readers. `control`, `events`
+and `notifications` default true as rollout intent but cannot enable adapters that
+do not exist. Setting them false also leaves those features unavailable. `kid_mode`, `resilience` and
 `telemetry_block` default false; true is refused until those later features have
 implementation and acceptance. Existing telemetry is left untouched: feature 1's
 health snapshot does not cover it sufficiently to disable the old collector.
@@ -90,21 +92,24 @@ worker log. No credential value is exposed through this status.
 Device metadata uses Samsung, model QN90A/S90D, enrollment firmware and package
 version. Firmware is currently the guard-verified enrollment value, not live
 update detection. Uptime is `CLOCK_BOOTTIME`; Root OK describes the admitted root
-worker while its MQTT availability is online. All other measurements are `null`,
-including power and screen, rather than inferred from process or broker health.
+worker while its MQTT availability is online. Feature 2 adds CPU/memory, fullscreen app identity/name and absolute volume/mute
+where a validated read succeeds. Remaining measurements are `null`, including
+power and screen, rather than inferred from process or broker health.
 The initial state has the requested signal subfields. No bedtime/screen-time
 entity or state is published.
 
 ### Stable entity contract
 
-| Domain | Entity names | Feature-1 availability |
+| Domain | Entity names | Current availability |
 | --- | --- | --- |
 | switch | Power, Screen, Mute, Game mode, Kid mode, Telemetry block | Unavailable; no mutation adapter |
-| select | Source, App, Picture mode, Audio output | Unavailable, empty options until actual inventory |
+| select | Source, App, Picture mode, Audio output | Unavailable; actual App/Source options when inventory is readable |
 | number | Volume, Sleep timer | Unavailable; absolute volume contract, never key emulation |
-| sensor | App, Input, Resolution, Refresh rate, HDR format | Unavailable |
+| sensor | App | Available after successful vconf/API observation |
+| sensor | Input, Resolution, Refresh rate, HDR format | Unavailable; visible-source qualification pending |
 | sensor | Firmware, Uptime | Available while bridge is online |
-| diagnostic sensor | CPU, Memory, Wi-Fi signal, Temperature | Unavailable |
+| diagnostic sensor | CPU, Memory | Available after successful kernel reads; CPU warmup is unknown |
+| diagnostic sensor | Wi-Fi signal, Temperature | Unavailable |
 | diagnostic binary_sensor | Firmware update pending | Unavailable |
 | diagnostic binary_sensor | Root OK | Available while bridge is online |
 | notify | Screen message | Unavailable; JSON command template for HA plain-text messages |
@@ -122,7 +127,7 @@ The nonretained `tv/<id>/event` topic is likewise reserved for real observations
 
 ## Command boundary
 
-Feature 1 validates the full fixed command vocabulary, but **all valid commands
+Features 1–2 validate the full fixed command vocabulary, but **all valid commands
 return `ok:false`, `error:unsupported_capability`**. They never dispatch shell
 commands, generic worker operations, URLs or app launches. Invalid commands return
 `unknown_command` or `invalid_payload`; retained commands return `retained_command`.
@@ -153,7 +158,7 @@ docker run --rm --network none --tmpfs /tmp:exec -v "$PWD:/src:ro" \
   -w /src couchroot-native-tests:py312 sh -eu -c '
   gcc -std=c99 -O2 -Wall -Wextra -Werror -Wno-unused-function \
     tests/mqtt/harness.c -ldl -pthread -o /tmp/mqtt-harness
-  MQTT_HARNESS=/tmp/mqtt-harness python3 -m unittest discover -s tests -p native_mqtt_test.py
+  MQTT_HARNESS=/tmp/mqtt-harness python3 -m unittest discover -s tests -p "native_mqtt*test.py"
 '
 ```
 

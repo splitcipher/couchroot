@@ -1,6 +1,8 @@
 {
   "dev": {
-    "identifiers": "tv_s90d",
+    "identifiers": [
+      "tv_s90d"
+    ],
     "name": "Example TV",
     "manufacturer": "Samsung",
     "model": "S90D",
@@ -284,7 +286,7 @@
       "availability_topic": "tv/s90d/unsupported",
       "state_topic": "tv/s90d/health",
       "value_template": "{{ value_json.temp_c | default(none) }}",
-      "unit_of_measurement": "\u00b0C"
+      "unit_of_measurement": "°C"
     },
     "firmware_update_pending": {
       "p": "binary_sensor",
@@ -304,9 +306,9 @@
       "entity_category": "diagnostic",
       "availability_topic": "tv/s90d/availability",
       "state_topic": "tv/s90d/health",
-      "value_template": "{{ value_json.root_ok | default(none) }}",
-      "payload_on": "True",
-      "payload_off": "False"
+      "value_template": "{{ 'ON' if value_json.root_ok else 'OFF' }}",
+      "payload_on": "ON",
+      "payload_off": "OFF"
     },
     "screen_message": {
       "p": "notify",

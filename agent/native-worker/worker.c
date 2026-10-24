@@ -725,6 +725,8 @@ static J *operation(J *request, Wire *w, const char *seq) {
 }
 #include "offline-reconcile.h"
 int main(int argc, char **argv) {
+  if (argc == 2 && !strcmp(argv[1], "--mqtt-foreground"))
+    return mqtt_foreground_main();
   if (argc >= 2 && !strcmp(argv[1], "--reconcile-state"))
     return offline_reconcile(argc, argv);
 #ifdef NATIVE_WORKER_FAULT_TEST

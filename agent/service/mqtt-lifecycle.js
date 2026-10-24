@@ -1,7 +1,14 @@
 'use strict';
 // Credentials and MQTT stay in the selected native worker. This lease only
 // admits an independently ready worker; maintenance/retirement fences win.
-function createMqttLifecycle(agent, config, version) {
+const { createMqttState } = require('./mqtt-state');
+function createMqttLifecycle(agent, config, version, api) {
+  const observer = createMqttState(
+    api || (typeof tizen === 'undefined' ? {} : tizen)
+  );
+  let observe = false,
+    foreground = null,
+    workerId;
   let busy = false,
     stopped = false,
     leaseState = 'waiting-worker';
@@ -18,14 +25,35 @@ function createMqttLifecycle(agent, config, version) {
         !status.capabilities.includes('mqtt-bridge-v1')
       ) {
         leaseState = 'waiting-worker';
+        observe = false;
+        foreground = null;
         return;
       }
-      const result = await agent.operation({
+      if (workerId !== status.worker_id) {
+        observe = false;
+        foreground = null;
+        workerId = status.worker_id;
+      }
+      const observations = observe ? await observer.sample(foreground) : null;
+      if (stopped) return;
+      const ready = agent.status();
+      if (
+        !ready.worker_ready ||
+        ready.admission_held ||
+        ready.native_upgrade ||
+        ready.worker_id !== status.worker_id
+      )
+        return;
+      const request = {
         op: 'mqtt.start',
         device: config.device,
         firmware: config.firmware,
         version,
-      });
+      };
+      if (observations) request.observations = JSON.stringify(observations);
+      const result = await agent.operation(request);
+      observe = !!(result && result.observe_state === true);
+      foreground = result && result.foreground_app;
       if (!stopped)
         leaseState =
           result &&
@@ -54,6 +82,7 @@ function createMqttLifecycle(agent, config, version) {
     },
     stop() {
       stopped = true;
+      observer.stop();
       leaseState = 'stopped';
     },
   };

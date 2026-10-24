@@ -138,8 +138,9 @@ class NativeWorkerBuildTests(unittest.TestCase):
             folder=Path(result['folder']);payload=folder/'package/payload'
             service=folder/'package/service'
             self.assertTrue((service/'mqtt-lifecycle.js').is_file())
+            self.assertTrue((service/'mqtt-state.js').is_file())
             sources=json.loads((payload/'native-manifest.json').read_text())['source']
-            for name in ('config','discovery','commands','wire','bridge'):
+            for name in ('config','discovery','commands','wire','bridge','foreground','metrics','state','fd'):
                 self.assertIn('native-worker/mqtt/'+name+'.h',sources)
             self.assertFalse((service/'managed-return.js').exists())
             self.assertFalse((service/'managed-launch.js').exists())

@@ -180,7 +180,7 @@ static int mqtt_string(J *j, const char *key, char *out, size_t cap) {
 typedef struct {
   char device[8], name[96], host[INET_ADDRSTRLEN], credentials[PATH_MAX];
   char user[32], password[33], firmware[96], version[32];
-  int port, enabled;
+  int port, enabled, state;
 } MqttConfig;
 static int mqtt_config(const char *path, const char *device,
                        const char *firmware, const char *version,
@@ -211,6 +211,7 @@ static int mqtt_config(const char *path, const char *device,
       mqtt_string(j, "credentials_file", c->credentials, sizeof c->credentials);
   c->port = (int)port;
   c->enabled = mqtt_boolean(j, "enabled", 1);
+  c->state = mqtt_boolean(j, "state", 1);
   for (size_t i = 6; i < sizeof keys / sizeof *keys; i++) {
     int value = mqtt_boolean(j, keys[i], i < 10);
     if (value < 0 || (i >= 10 && value))

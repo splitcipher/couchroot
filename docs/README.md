@@ -29,6 +29,7 @@ They are not deployment instructions or acceptance of the current source.
 - [Couchroot command-line installer](guides/universal-installer.md)
 
 - [Home Assistant MQTT bridge](guides/mqtt.md)
+- [MQTT measured state and qualification gates](guides/mqtt-state.md)
 
 ## Project plans and release records
 

@@ -113,7 +113,10 @@ static int mqtt_publish_json(int fd, const char *topic, J *value,
   return good;
 }
 static int mqtt_connect(const MqttConfig *c) {
+  if (!mqtt_fd_lock(1))
+    return -1;
   int fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, 0);
+  mqtt_fd_unlock();
   if (fd < 0)
     return -1;
   struct sockaddr_in a = {.sin_family = AF_INET, .sin_port = htons(c->port)};

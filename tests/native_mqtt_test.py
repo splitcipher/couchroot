@@ -90,6 +90,7 @@ class MqttTests(unittest.TestCase):
             [self.bin, mode, str(self.config), "qn90a"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
         )
         self.addCleanup(self.stop)
         self.assertEqual(self.proc.stdout.readline(), b"ready\n")
@@ -251,6 +252,21 @@ class MqttTests(unittest.TestCase):
         native.setUp()
         self.addCleanup(native.tearDown)
         self.assertIn("mqtt-bridge-v1", native.op("status")["result"]["capabilities"])
+        # Optional configuration must yield before allocating descriptors needed
+        # by the protocol/monitor; recovery after pressure needs no worker reset.
+        import resource
+        original = resource.prlimit(native.worker_pid, resource.RLIMIT_NOFILE)
+        occupied = {int(p.name) for p in Path(f"/proc/{native.worker_pid}/fd").iterdir()}
+        limit = free = 0
+        while free < 3:
+            if limit not in occupied: free += 1
+            limit += 1
+        try:
+            resource.prlimit(native.worker_pid, resource.RLIMIT_NOFILE, (limit, original[1]))
+            self.assertEqual(native.op("mqtt.start",device="qn90a",firmware="TEST-FIRMWARE-1.0",version="test-build")["result"]["state"],"unconfigured")
+        finally:
+            resource.prlimit(native.worker_pid, resource.RLIMIT_NOFILE, original)
+        self.assertTrue(native.op("status")["ok"])
         self.assertEqual(
             native.op(
                 "mqtt.start",
@@ -265,6 +281,12 @@ class MqttTests(unittest.TestCase):
         self.assertEqual(
             self.publications(5)["tv/qn90a/availability"], (True, b"online")
         )
+        result = native.op(
+            "mqtt.start", device="qn90a", firmware="TEST-FIRMWARE-1.0",
+            version="test-build", observations=json.dumps({"state":{"volume":17},"supported":{"volume":True}}),
+        )["result"]
+        self.assertTrue(result["observe_state"])
+        self.assertEqual(json.loads(self.publications(1)["tv/qn90a/state"][1])["volume"],17)
         self.assertEqual(
             native.op(
                 "mqtt.start",

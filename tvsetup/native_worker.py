@@ -94,6 +94,10 @@ def build(folder, command):
         "mqtt/commands.h",
         "mqtt/wire.h",
         "mqtt/bridge.h",
+        "mqtt/foreground.h",
+        "mqtt/fd.h",
+        "mqtt/metrics.h",
+        "mqtt/state.h",
     )
     inputs = [SOURCE / "native-worker" / name for name in headers] + [
         SOURCE / "native-worker/worker.c",

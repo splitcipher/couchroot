@@ -6,7 +6,15 @@
 
 #include "commands.h"
 
+#include "fd.h"
+
 #include "wire.h"
+
+#include "foreground.h"
+
+#include "metrics.h"
+
+#include "state.h"
 static double mqtt_lease;
 /* One replaceable snapshot, no offline publication/command queue. The first
  * changed snapshot sets a bounded 250 ms deadline; subsequent changes coalesce.
@@ -37,12 +45,13 @@ static int mqtt_owned(void) {
   return good;
 }
 static int mqtt_snapshot(int fd, const MqttConfig *c, MqttState *s,
-                         int discovery) {
+                         const char *discovery_json, const char *health,
+                         int discovery, int publish_health) {
   char topic[128];
   if (discovery) {
     snprintf(topic, sizeof topic, "homeassistant/device/tv_%s/config",
              c->device);
-    if (!mqtt_publish_json(fd, topic, mqtt_discovery(c), 1))
+    if (!mqtt_publish(fd, topic, discovery_json, 1))
       return 0;
     snprintf(topic, sizeof topic, "tv/%s/unsupported", c->device);
     if (!mqtt_publish(fd, topic, "offline", 1))
@@ -56,7 +65,26 @@ static int mqtt_snapshot(int fd, const MqttConfig *c, MqttState *s,
     return 0;
   s->dirty = 0;
   snprintf(topic, sizeof topic, "tv/%s/health", c->device);
-  return mqtt_publish_json(fd, topic, mqtt_health(c), 1);
+  return !publish_health || mqtt_publish(fd, topic, health, 1);
+}
+static void mqtt_refresh(const MqttConfig *c, MqttSampler *sampler,
+                         MqttState *state, char discovery[24576],
+                         char health[2048], double *discovery_due) {
+  J *s, *h, *features;
+  mqtt_sample(c, sampler, &s, &h, &features, mqtt_cancelled);
+  mqtt_state_update(state, json(s), stamp());
+  snprintf(health, 2048, "%s", json(h));
+  J *d = mqtt_discovery(c, features);
+  const char *raw = json(d);
+  if (strlen(raw) < 24576 && strcmp(raw, discovery)) {
+    strcpy(discovery, raw);
+    if (!*discovery_due)
+      *discovery_due = stamp() + 250;
+  }
+  json_object_put(s);
+  json_object_put(h);
+  json_object_put(features);
+  json_object_put(d);
 }
 static int mqtt_incoming(int fd, const MqttConfig *c, unsigned char type,
                          unsigned char *packet, size_t size, double *tokens,
@@ -130,29 +158,49 @@ static int mqtt_incoming(int fd, const MqttConfig *c, unsigned char type,
 static void *mqtt_loop(void *unused) {
   (void)unused;
   MqttState state = {0};
-  J *initial = mqtt_initial_state();
-  mqtt_state_update(&state, json(initial), stamp());
-  json_object_put(initial);
+  MqttSampler sampler = {0};
+  char discovery_json[24576] = {0}, health_json[2048] = {0};
+  double sample_due = 0, discovery_due = 0;
   unsigned backoff = 1;
   while (!mqtt_cancelled()) {
     if (!mqtt_owned()) {
       poll(NULL, 0, 100);
       continue;
     }
+    /* Always sample before connect; never reconnect with an old retained value.
+     */
+    mqtt_refresh(&mqtt_settings, &sampler, &state, discovery_json, health_json,
+                 &discovery_due);
+    sample_due = stamp() + 2000;
     int fd = mqtt_connect(&mqtt_settings);
     if (fd >= 0) {
+      mqtt_refresh(&mqtt_settings, &sampler, &state, discovery_json,
+                   health_json, &discovery_due);
       double connected = stamp(), refresh = connected + 60000,
              next_ping = connected + 15000, ping_deadline = 0;
       double tokens = 20, token_at = connected, birth_due = 0;
       mqtt_log("info", "connected");
-      int good = mqtt_owned() && mqtt_snapshot(fd, &mqtt_settings, &state, 1);
+      int good =
+          mqtt_owned() && mqtt_snapshot(fd, &mqtt_settings, &state,
+                                        discovery_json, health_json, 1, 1);
+      discovery_due = 0;
       while (good && mqtt_owned()) {
         double now = stamp();
-        if ((birth_due && now >= birth_due) || now >= refresh ||
+        if (now >= sample_due) {
+          mqtt_refresh(&mqtt_settings, &sampler, &state, discovery_json,
+                       health_json, &discovery_due);
+          sample_due = stamp() + 2000;
+        }
+        if ((birth_due && now >= birth_due) ||
+            (discovery_due && now >= discovery_due) || now >= refresh ||
             mqtt_state_due(&state, now)) {
-          good = mqtt_snapshot(fd, &mqtt_settings, &state, birth_due != 0);
-          refresh = now + 60000;
-          birth_due = 0;
+          int full = birth_due != 0 || now >= refresh;
+          good = mqtt_snapshot(fd, &mqtt_settings, &state, discovery_json,
+                               health_json,
+                               birth_due != 0 || discovery_due != 0, full);
+          if (full)
+            refresh = now + 60000;
+          birth_due = discovery_due = 0;
         }
         if (ping_deadline && now >= ping_deadline)
           break;
@@ -211,6 +259,8 @@ static void mqtt_stop(void) {
   mqtt_thread_started = 0;
   mqtt_active = 0;
   mqtt_wipe(&mqtt_settings, sizeof mqtt_settings);
+  mqtt_wipe(mqtt_observations, sizeof mqtt_observations);
+  mqtt_foreground_id[0] = 0;
 }
 /* Only the existing authenticated coordinator admits/renews this capability.
  * No private config path or broker credentials can be supplied through IPC. */
@@ -233,11 +283,18 @@ static J *mqtt_start(J *request) {
     pthread_mutex_lock(&mqtt_mutex);
     mqtt_lease = stamp() + 10000;
     pthread_mutex_unlock(&mqtt_mutex);
+    mqtt_observe(request);
+    mqtt_observation_reply(result);
     str(result, "state", "started");
     return result;
   }
-  if (!mqtt_config("/opt/couchroot/mqtt/config.json", device, firmware, version,
-                   &mqtt_settings)) {
+  int admitted = mqtt_fd_lock(2);
+  int configured =
+      admitted && mqtt_config("/opt/couchroot/mqtt/config.json", device,
+                              firmware, version, &mqtt_settings);
+  if (admitted)
+    mqtt_fd_unlock();
+  if (!configured) {
     mqtt_wipe(&mqtt_settings, sizeof mqtt_settings);
     str(result, "state", "unconfigured");
     return result;
@@ -250,6 +307,7 @@ static J *mqtt_start(J *request) {
   mqtt_stopping = 0;
   mqtt_lease = stamp() + 10000;
   pthread_mutex_unlock(&mqtt_mutex);
+  mqtt_observe(request);
   /* Do not let an optional broker failure stop the administration worker. */
   sigset_t blocked, previous;
   lifecycle_signals(&blocked);
@@ -264,6 +322,7 @@ static J *mqtt_start(J *request) {
     return result;
   }
   mqtt_active = mqtt_thread_started = 1;
+  mqtt_observation_reply(result);
   str(result, "state", "started");
   return result;
 }
