@@ -15,7 +15,7 @@ BASELINE = {
     "id": "qn90a",
     "model": "QN85QN90AAFXZA",
     "platform": "21_NIKEM2_QTV",
-    "firmware": "T-NKM2AKUC-2301.1",
+    "firmware": "T-NKM2AKUC-2310.0",
     "architecture": "armv7l",
     "framework": "netcoreapp3.1",
     "runtime": "3.1.3",
