@@ -64,7 +64,7 @@ the app to force an update or reset preferences to resolve a version problem.
 For one-off live operations, install the toolkit once in the active checkout
 (`python3 -m venv .venv && .venv/bin/pip install -e .`) and run scripts with that
 interpreter. Import from the installed package —
-`from tvsetup.research import Run, Checks, STATE, PRIVATE` — instead of copying a
+`from tvsetup.fieldkit import Run, Checks, STATE, PRIVATE` — instead of copying a
 `common.py`/`live_common.py` helper or inserting a sibling checkout onto
 `sys.path`; those path hacks are the main cause of past import failures. `Run`
 journals each request's intent and result and refuses replays. Build

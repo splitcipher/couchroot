@@ -1,4 +1,4 @@
-"""Shared plumbing for ad-hoc live research/validation scripts.
+"""Shared plumbing for ad-hoc live field and validation scripts.
 
 Background: one-off scripts under ``.local-research/<run>/`` used to each carry
 their own copy of a ``common.py`` / ``live_common.py`` helper. Those copies all
@@ -11,7 +11,7 @@ wrong-repo failures in the deploy sessions.
 With ``tvsetup`` installed editable (``pip install -e .``), those path hacks are
 unnecessary: a run script does ::
 
-    from tvsetup.research import Run, STATE, PRIVATE, atomic_json
+    from tvsetup.fieldkit import Run, STATE, PRIVATE, atomic_json
 
     run = Run("s90d", Path(__file__).parent, client_cfg)
     run.status("preflight", expect_device="s90d")
