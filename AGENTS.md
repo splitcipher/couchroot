@@ -24,3 +24,11 @@ Validate changes at the affected boundary: `npm test` for UI/preview,
 `python3 -m unittest discover -s tests -p '*_test.py'` for setup/deployment,
 and skill validation when editing skills. Report local tests separately from
 actual device verification. See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for release work.
+
+For fast local iteration, the same Python tests also run under pytest in parallel,
+about 3x faster (install the dev extras: `pip install -e '.[dev]'`). Inner loop
+while editing a module: `pytest tests/<name>_test.py` (sub-second). Broad check:
+`pytest -n auto --ignore=tests/s90d_recovery_test.py` (~7s; skips the slow recovery
+suite, the one long pole). These are convenience runners only — the `unittest`
+command above remains the authoritative gate, and device/sandbox validation should
+use the Python tests, not `npm test` (its UI suite launches a browser).
