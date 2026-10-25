@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "couchroot-tvsetup"
+description = "Unofficial bounded Samsung TV setup/deployment toolkit (host side)."
+requires-python = ">=3.12"
+dynamic = ["version"]
+# lxml is only needed for signed-artifact verification (imported lazily in
+# tvsetup/artifacts.py). It stays a hard dependency so `tv-setup`/`deploy-ui`
+# have it, but importing the rest of tvsetup does not require it.
+dependencies = ["lxml==6.1.3"]
+
+[tool.setuptools.dynamic]
+version = { attr = "tvsetup.__version__" }
+
+# Flat layout: packages live at the repo root. `agent` has no __init__.py and is
+# imported as a namespace package (tvsetup.native_gate / native_upgrade do
+# `from agent.client import request`), so it must be declared here or an editable
+# install cannot resolve it from outside the repo. `namespaces = true` is what
+# lets the bare `agent` directory be discovered without adding an __init__.py to
+# device-adjacent code.
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tvsetup*", "agent"]
+namespaces = true
