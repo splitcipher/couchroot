@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-24",
+  "updated": "2026-10-25",
+  "model": "QN65QN90AAGXZD",
+  "host": "192.0.2.9",
+  "platform": "21_NIKEM2_QTV",
+  "firmware": "T-NKM2UABC-2301.1",
+  "firmware_after_update": "T-NKM2UABC-2310.0",
+  "architecture": "armv7l",
+  "runtime": "netcoreapp3.1",
+  "root_binaries": {
+    "/usr/sbin/sdbd-tarlauncher": "3580e6dcf5d9c6d5d0a606d43a3d878641f35eeac07317a405fb45bbed69a653",
+    "/usr/bin/dotnet": "d2a35114d788c22d22d329acdb2f379c17b75b7099997fb8252cbd6dd940702e",
+    "/usr/share/sdbd/public.pem": "c83cab64331f092ba99f666b8bb20a49dd1fff04030336c2ea34f6b55ca09d09",
+    "/etc/passwd": "610fe3305c96f9101c0ca5f65ae8eaa7111a9c8b8ced673f01d9e2553ba2ffad"
+  },
+  "root": {
+    "uid": 0,
+    "euid": 0,
+    "gid": 0,
+    "egid": 0,
+    "cap_effective": "0000003fffffffff",
+    "smack": "User",
+    "runtime": "3.1",
+    "staging_cleaned": true,
+    "system_files_unchanged": true
+  },
+  "transport": {
+    "plain_sdb_shell": "closed; returns no output for commands",
+    "file_sync": "pull works",
+    "injection_timing": {
+      "control_seconds": 0.25,
+      "delayed_seconds": 3.09,
+      "command": "/bin/true versus /bin/sleep 3"
+    },
+    "sdbd_wedge_after_failed_probe_seconds": 60
+  },
+  "markers": {
+    "/opt/usr/share/systemd/system/pisa-service": {
+      "size": 0,
+      "mode": "0666",
+      "pre_state": "absent",
+      "created": "2026-10-24T15:53:00-03:00",
+      "post_reboot": {
+        "active_state": "inactive",
+        "sub_state": "dead",
+        "condition_result": "no"
+      }
+    },
+    "/opt/usr/share/systemd/system/canalysis-daemon": {
+      "size": 0,
+      "mode": "0666",
+      "pre_state": "absent",
+      "created": "2026-10-24T15:53:00-03:00",
+      "post_reboot": {
+        "active_state": "inactive",
+        "sub_state": "dead",
+        "condition_result": "no"
+      }
+    }
+  },
+  "adplayer": {
+    "package": "adplatform",
+    "app_id": "adplatform.ADPlayer",
+    "version": "0.10.96",
+    "store_id": "3201503001519",
+    "backup_sha256": "9410df7b508a88a7b9c406056e9d47b8c7ddbbb77e87dc54969382f5893d0c17",
+    "removal": "pkgcmd -u -n adplatform",
+    "package_count_before": 342,
+    "package_count_after": 341,
+    "install_directory": "absent",
+    "catalog_row": "stale after pkgcmd; reconciled to absent by the 2310.0 update"
+  },
+  "verification": {
+    "post_reboot": "adagent-service, pisa-service and canalysis-service inactive with ConditionResult=no; no matching processes",
+    "post_update": "markers present with original timestamps; same units inactive; adplayer package still absent; stale catalog row gone; root probe still succeeds",
+    "contents_recognition_service": "active on 2301.1 and 2310.0; no known condition marker was found"
+  },
+  "limitations": [
+    "One owner-authorized TV; no second unit of this model or firmware was tested.",
+    "Root access is volatile. Only the two marker files persist.",
+    "The USB recovery image was downloaded and hash-verified but no recovery was executed.",
+    "No physical remote, playback, standby or panel verification was performed.",
+    "The TV updated from 2301.1 to 2310.0 during the experiment; results after that update are recorded separately.",
+    "pkgcmd was used for the Ad Player removal instead of the reviewed WAS helper; a catalog row remained stale until the OTA reconciled it.",
+    "The model and firmware are not in the reviewed profile registry; this evidence does not add support."
+  ]
+}

@@ -22,6 +22,7 @@ They are not deployment instructions or acceptance of the current source.
 - [Couchroot owner operations](guides/owner-operations.md)
 - [S90D boot checkpoints and recovery](guides/s90d-boot-recovery.md)
 - [SDB connection reuse](guides/sdb-connection-reliability.md)
+- [SDB pull-only inventory](guides/sdb-pull-inventory.md)
 - [Shared Samsung TV monitoring](guides/telemetry.md)
 - [TV setup and reapplication (unreleased)](guides/tv-setup.md)
 - [Deploy the Hub UI](guides/ui-deployment.md)
@@ -52,6 +53,7 @@ evidence referenced by the lab notes lives in [lab/inventory/](lab/inventory/).
 
 - [QN90A port and rollback](lab/devices/qn90a/README.md)
 - [QN90A 2310.0 agent recovery qualification](lab/devices/qn90a/firmware-2310-agent-trial.md)
+- [QN90A Brazil: root, suppression and cleanup evidence](lab/devices/qn90a/br-t-nkm2uabc.md)
 - [QN90A optional-app cleanup](lab/devices/qn90a/app-cleanup.md)
 - [QN90A boot performance: from ~118 s to ~10 s](lab/devices/qn90a/boot-performance.md)
 - [QN90A return after AirPlay mirroring](lab/devices/qn90a/casting.md)
