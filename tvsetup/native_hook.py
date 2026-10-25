@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 
 from .common import Refused, sha, safe_id
+from .registry import reviewed_identity
 from .transport import Q, hash_guard
 
 HOOK = "/opt/etc/parseinfo.sh"
@@ -60,7 +61,7 @@ def enrollment(path):
         or set(data) != expected
         or data["schema"] != 1
         or data["device"] != "qn90a"
-        or data["firmware"] != "T-NKM2AKUC-2301.1"
+        or data["firmware"] != reviewed_identity("qn90a")["firmware"]
     ):
         raise Refused("Invalid QN90A hook enrollment schema/firmware")
     entries = (

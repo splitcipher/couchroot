@@ -24,12 +24,12 @@ from .planner import (
     SPLASH_RESOURCE,
     source_revision,
 )
+from .registry import reviewed_identity
 from .site import binding, configured_profile, load_site
 from .transport import CACHE, SAVER, Q, Transport, hash_guard
 
 SCOPE = "s90d-boot-recovery"
 HELPER = SAVER + "/Boot.dll"
-FIRMWARE = "T-PTMDAKUC-0090-2130.0"
 # Historical composite and boot-tested splash helper; not additions to the
 # installation allowlist, and never selected as replacement artifacts.
 HELPERS = KNOWN_HELPERS | {
@@ -85,7 +85,7 @@ def validate_state(state):
     if (
         not isinstance(state, dict)
         or state.get("device") != "s90d"
-        or state.get("firmware") != FIRMWARE
+        or state.get("firmware") != reviewed_identity("s90d")["firmware"]
     ):
         raise Refused("Expected an S90D firmware-pinned recovery snapshot")
     files, meta = state.get("files", {}), state.get("metadata", {})
@@ -160,7 +160,12 @@ class RecoveryDriver(Driver):
                 f"else test ! -e {Q(path)}; echo ABSENT; fi\n"
             )
         output = self.tv.root(script, namespace=True)
-        state = dict(device="s90d", firmware=FIRMWARE, files={}, metadata={})
+        state = dict(
+            device="s90d",
+            firmware=reviewed_identity("s90d")["firmware"],
+            files={},
+            metadata={},
+        )
         for i, path in enumerate(PATHS):
             match = re.search(
                 r"(?:^|\n)RECOVERY_" + str(i) + r"\n(.*?)(?=\nRECOVERY_|\Z)",

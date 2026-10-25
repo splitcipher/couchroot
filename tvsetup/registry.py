@@ -137,3 +137,17 @@ def profile(device):
         return profiles()[device]
     except (KeyError, TypeError) as error:
         raise Refused("Unsupported TV profile: " + str(device)) from error
+
+
+def reviewed_identity(device):
+    """Return the reviewed model/firmware pair; the profile is the only source."""
+    value = profile(device)
+    return {key: value[key] for key in ("model", "firmware")}
+
+
+def has_identity(value, device):
+    """Whether a configured profile or record still carries the reviewed identity."""
+    expected = reviewed_identity(device)
+    return isinstance(value, dict) and all(
+        value.get(key) == expected[key] for key in expected
+    )
