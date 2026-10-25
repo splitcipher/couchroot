@@ -1,16 +1,28 @@
 # MQTT feature 2: measured state and remaining qualification gates
 
-This increment is **offline-tested source, not TV acceptance**. Feature 1's HA-side
-review on 2026-10-24 accepted the discovery/ACL contract without deployment. Keep
-its `a4e942d` build separate for the owner's first S90D acceptance. Do not proceed
+This increment is **offline-tested source, not TV acceptance**. Feature 1's S90D
+deployment uses `a4e942d` plus its bounded candidate-provenance correction. The
+owner reported HA discovery/commands, HA birth and broker-outage checks passed
+on 2026-10-24; the TV reboot remains pending separate authorization. Keep that
+deployed build separate from this feature-2 branch. Do not proceed
 to feature 3 controls on the strength of simulated state or a successful install.
 
 ## Implemented read path
 
 The existing coordinator lease admits state collection only after the worker has
 read valid private MQTT configuration with `state:true`. No config means no state
-API reads. `state:false` leaves the three feature-1 Firmware/Uptime/Root OK entities
-available and disables the new sampling. Existing telemetry stays enabled.
+API reads. `state:false` leaves Firmware/Uptime/Root OK and the new Agent uptime
+diagnostic available and disables the state sampling. Existing telemetry stays enabled.
+
+`health.agent_uptime_s` measures whole elapsed seconds since the native worker
+process started, using its already-verified kernel start ticks and
+`CLOCK_BOOTTIME`. It is not coordinator or MQTT-thread uptime, nor CPU time.
+It survives MQTT reconnect/birth/lease renewal and includes suspend time; a new
+worker starts near zero. Invalid identity/clock data is `null`. The diagnostic
+sensor **Agent uptime** uses unique ID `tv_<id>_agent_uptime`, making 27 entities
+in this build. Existing **Uptime**, its `tv_<id>_uptime` ID and `uptime_s` boot-time
+value are unchanged. A coordinator-only restart that preserves the worker will
+not reset Agent uptime; compare the coordinator process identity separately.
 
 The worker samples aggregate `/proc/stat` and `/proc/meminfo` every two seconds.
 CPU uses deltas of the first eight counters, excludes guest double counting, and
@@ -76,6 +88,7 @@ adapter on one device cannot grant a capability on the other.
 | `volume`, `muted` | Validated integer 0–100 and boolean state; controls still unsupported | Compare OSD at 0/15/100 and mute/unmute using the physical remote, including external audio routes; no key-relative estimate |
 | `cpu_pct`, `mem_used_pct` | Available after successful kernel reads; warmup/failure unknown | Compare same-interval existing telemetry; inspect overhead and standby behavior |
 | Firmware, Uptime, Root OK | Existing boot-guard enrollment firmware, CLOCK_BOOTTIME, admitted root UID | Firmware is not a live update detector; do not bypass its exact guard |
+| Agent uptime | Native worker process age from its admitted kernel start identity | Compare `/proc/<pid>/stat` and `CLK_TCK`; reconnect/birth must not reset it, a separately approved worker restart must reset it while boot Uptime continues |
 | `power`, `screen` | Unsupported / null | Distinguish on, picture-off, standby and process-off with independent panel/power observations and bounded read-only native evidence; connectivity or deviced state alone is insufficient |
 | `input`, `input_label`; Input sensor | Unsupported / null; real port inventory only | Establish visible source ownership plus CEC label API/schema. Changing CEC names must change discovery, while preserving command port identity |
 | `signal.resolution`, `refresh_hz` | Unsupported / null; [offline MAIN-window model](../../research/mqtt-state/README.md) | Prove selected MAIN input is visible, reject cached timing behind streaming apps and no-signal inputs, validate units/transitions per firmware |
@@ -100,21 +113,26 @@ Run the existing [MQTT container suite](mqtt.md#offline-verification) with patte
 `native_mqtt*test.py`. It covers kernel resets/overflow/missing data, foreground
 hangs/oversize output/recovery, stale readings, dynamic discovery, disabled state,
 real production-worker IPC and shutdown, birth/reconnect and command rejection.
+The process-age tests cover tick units, subsecond boundaries, bad identity/clock
+data and recovery, plus actual process restart versus broker reconnect and birth.
 The normal native build checks the new headers in its source manifest, ARMv7
 soft-float ABI, dependency/GLIBC limits and two byte-identical builds. These checks
 cannot qualify vendor API semantics or signed service privileges on a TV.
 
 ## Later owner-run acceptance and rollback
 
-1. Finish the separately prepared **feature-1 S90D-only** acceptance first, using
-   its pinned commit and private password-free config. HA-side discovery, the 26
-   entities, ACL and nonretained birth are observed by the HA operator after that
-   deployment. This document does not authorize any live action.
+1. Finish the separately prepared **feature-1 S90D-only** acceptance first,
+   including its separately authorized reboot observation. Feature 1 has 26
+   entities; this feature-2 build has 27 because Agent uptime is additive.
+   This document does not authorize any live action.
 2. For a separately authorized feature-2 trial, retain original credentials,
    signed prior package, native candidate, checkout and journals. Follow the
    [native handoff guide](native-worker-upgrades.md), including exact identity,
    firmware/hash, registration, pending-operation and independent SDK recovery
-   checks. Installing a package is separate from selecting its native worker.
+   checks. The first feature-2 trial is S90D only, after James's approval; do not
+   contact QN90A. Repeat HA-side A (discovery/state/command refusal), B (birth) and
+   C (broker outage/retained-command refusal), with each exercise coordinated by
+   the owner. Installing a package is separate from selecting its native worker.
 3. Compare each implemented field against the TV/telemetry, allowing roughly eight
    seconds for app identity/label convergence. Never accept a previous app's label
    under a new ID. Inventory changes should settle within 30 seconds plus debounce,
@@ -146,3 +164,7 @@ its telemetry/boot/recovery readers. API contracts were checked against Samsung'
 [System Information](https://developer.samsung.com/smarttv/develop/api-references/tizen-web-device-api-references/systeminfo-api.html)
 and [TV Window](https://developer.samsung.com/smarttv/develop/api-references/tizen-web-device-api-references/tvwindow-api.html)
 references. Documentation does not prove availability in either installed service.
+
+Process-age units follow Linux's [`/proc/<pid>/stat` starttime contract](https://man7.org/linux/man-pages/man5/proc_pid_stat.5.html)
+and [`CLOCK_BOOTTIME`](https://man7.org/linux/man-pages/man2/clock_gettime.2.html).
+These contracts and offline tests do not qualify TV suspend/resume behavior.

@@ -319,6 +319,16 @@
       "retain": false,
       "qos": 0,
       "command_template": "{{ {\"title\": \"Home Assistant\", \"message\": value} | to_json }}"
+    },
+    "agent_uptime": {
+      "p": "sensor",
+      "name": "Agent uptime",
+      "unique_id": "tv_s90d_agent_uptime",
+      "entity_category": "diagnostic",
+      "availability_topic": "tv/s90d/availability",
+      "state_topic": "tv/s90d/health",
+      "value_template": "{{ value_json.agent_uptime_s | default(none) }}",
+      "unit_of_measurement": "s"
     }
   }
 }

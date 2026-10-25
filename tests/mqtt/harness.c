@@ -1,6 +1,7 @@
 /* Host-only test entry point; never packaged. SPDX-License-Identifier: 0BSD */
 #include "../../agent/native-worker/common.h"
 #include <pthread.h>
+static char worker_start_ticks[32];
 static void lifecycle_signals(sigset_t *set) {
   sigemptyset(set);
   sigaddset(set, SIGTERM);
@@ -17,6 +18,38 @@ int main(int argc, char **argv) {
   if (argc == 2 && !strcmp(argv[1], "--mqtt-foreground"))
     return mqtt_foreground_main();
   libraries();
+  /* Host harness uses its own kernel start time just like the admitted worker. */
+  FILE *stat = fopen("/proc/self/stat", "r");
+  char process[4096];
+  assert(stat && fgets(process, sizeof process, stat));
+  fclose(stat);
+  char *tail = strrchr(process, ')'), *save;
+  assert(tail);
+  int field = 0;
+  for (char *part = strtok_r(tail + 2, " ", &save); part;
+       part = strtok_r(NULL, " ", &save), field++)
+    if (field == 19) {
+      assert(strlen(part) < sizeof worker_start_ticks);
+      strcpy(worker_start_ticks, part);
+      break;
+    }
+  if (argc == 2 && !strcmp(argv[1], "process-age")) {
+    char raw[4096];
+    size_t n = fread(raw, 1, sizeof raw - 1, stdin);
+    raw[n] = 0;
+    J *request = parse(raw), *result = obj();
+    assert(request);
+    struct timespec now = {.tv_sec = number(request, "seconds"),
+                          .tv_nsec = number(request, "nanoseconds")};
+    json_object_object_add(result, "age",
+                           mqtt_process_age(textval(request, "start"),
+                                            number(request, "hz"),
+                                            get(request, "no_clock") ? NULL : &now));
+    puts(json(result));
+    json_object_put(result);
+    json_object_put(request);
+    return 0;
+  }
   signal(SIGPIPE, SIG_IGN);
   if (argc == 3 && !strcmp(argv[1], "command")) {
     char raw[4096];

@@ -278,9 +278,12 @@ class MqttTests(unittest.TestCase):
         )
         self.handshake()
         self.addCleanup(self.stop)
-        self.assertEqual(
-            self.publications(5)["tv/qn90a/availability"], (True, b"online")
-        )
+        initial = self.publications(5)
+        self.assertEqual(initial["tv/qn90a/availability"], (True, b"online"))
+        health = json.loads(initial["tv/qn90a/health"][1])
+        self.assertIsInstance(health["agent_uptime_s"], int)
+        self.assertGreaterEqual(health["agent_uptime_s"], 0)
+        self.assertLessEqual(health["agent_uptime_s"], health["uptime_s"])
         result = native.op(
             "mqtt.start", device="qn90a", firmware="TEST-FIRMWARE-1.0",
             version="test-build", observations=json.dumps({"state":{"volume":17},"supported":{"volume":True}}),

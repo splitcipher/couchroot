@@ -1,8 +1,9 @@
 # Home Assistant MQTT bridge — features 1–2
 
 This increment implements outbound MQTT and discovery in the existing native
-worker. It is source-only and has **not been deployed or accepted on a TV**.
-Feature 1 received HA-side review without deployment. Feature 2 adds measured
+worker. Feature 2 is source-only and has **not been deployed or accepted on a TV**.
+The owner reported feature-1 S90D HA-side acceptance for discovery, birth and
+broker outage; its TV reboot remains pending. Feature 2 adds measured
 state and explicitly gated remaining adapters; see the
 [state/qualification guide](mqtt-state.md). Stop at this boundary before controls.
 No broker, Home Assistant, router or telemetry configuration is changed.
@@ -86,12 +87,18 @@ broker's will. MQTT failures do not change worker selection or acquisition polic
 No blanket retry of a TV mutation exists. The existing authenticated agent status
 adds `mqtt.lease_state` with a fixed redacted code: `started` means worker admission,
 not confirmed broker/HA readiness. `unconfigured` includes missing or refused files;
-`disabled` is an explicit false flag. Broker connection codes remain in the structured
-worker log. No credential value is exposed through this status.
+`disabled` is an explicit false flag. The worker emits fixed connection codes to
+stderr, but the current production unit uses `StandardError=null`, so those events
+are not retained there. No birth/SUBACK-success event or rate-drop counter exists.
+Do not claim a historical event trace from lease status. No credential value is
+exposed through this status.
 
 Device metadata uses Samsung, model QN90A/S90D, enrollment firmware and package
 version. Firmware is currently the guard-verified enrollment value, not live
-update detection. Uptime is `CLOCK_BOOTTIME`; Root OK describes the admitted root
+update detection. Uptime remains `CLOCK_BOOTTIME`; the added diagnostic Agent
+uptime (`agent_uptime_s`) measures native worker process age and resets only when
+that worker is replaced/restarted. It adds one entity (27 total) without renaming
+the original Uptime. Root OK describes the admitted root
 worker while its MQTT availability is online. Feature 2 adds CPU/memory, fullscreen app identity/name and absolute volume/mute
 where a validated read succeeds. Remaining measurements are `null`, including
 power and screen, rather than inferred from process or broker health.
@@ -109,6 +116,7 @@ entity or state is published.
 | sensor | Input, Resolution, Refresh rate, HDR format | Unavailable; visible-source qualification pending |
 | sensor | Firmware, Uptime | Available while bridge is online |
 | diagnostic sensor | CPU, Memory | Available after successful kernel reads; CPU warmup is unknown |
+| diagnostic sensor | Agent uptime | Available while bridge is online; invalid clock/identity is unknown |
 | diagnostic sensor | Wi-Fi signal, Temperature | Unavailable |
 | diagnostic binary_sensor | Firmware update pending | Unavailable |
 | diagnostic binary_sensor | Root OK | Available while bridge is online |

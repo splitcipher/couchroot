@@ -34,6 +34,7 @@ static const struct {
     {"firmware_update_pending", "binary_sensor", "Firmware update pending",
      "firmware_update_pending", NULL, NULL, 1},
     {"root_ok", "binary_sensor", "Root OK", "root_ok", NULL, NULL, 1},
+    {"agent_uptime", "sensor", "Agent uptime", "agent_uptime_s", NULL, "s", 1},
     {"screen_message", "notify", "Screen message", NULL, "notify", NULL, 0}};
 static J *mqtt_discovery(const MqttConfig *c, J *features) {
   J *d = obj(), *dev = obj(), *origin = obj(), *components = obj();
@@ -65,6 +66,7 @@ static J *mqtt_discovery(const MqttConfig *c, J *features) {
       str(e, "entity_category", "diagnostic");
     /* Measurement support never enables a control. Feature 3 owns setters. */
     int available = !strcmp(key, "firmware") || !strcmp(key, "uptime") ||
+                    !strcmp(key, "agent_uptime") ||
                     !strcmp(key, "root_ok") ||
                     (c->state && !mqtt_entities[i].command && features &&
                      json_object_get_boolean(get(features, key)));
@@ -162,13 +164,42 @@ static J *mqtt_initial_state(void) {
   json_object_object_add(s, "signal", signal);
   return s;
 }
+/* Reuse the kernel process identity captured before worker admission. MQTT
+ * reconnects and lease renewals must not reset this clock. CLOCK_BOOTTIME and
+ * /proc start ticks share the boot-relative elapsed-time basis, including sleep.
+ * Failure is unknown, never a substitute boot uptime or a new start time. */
+static J *mqtt_process_age(const char *start, long hz,
+                           const struct timespec *now) {
+  if (!start || !*start || strlen(start) > 20 ||
+      strspn(start, "0123456789") != strlen(start) || hz <= 0 || !now ||
+      now->tv_sec < 0 || now->tv_nsec < 0 || now->tv_nsec >= 1000000000L)
+    return NULL;
+  errno = 0;
+  char *end;
+  unsigned long long ticks = strtoull(start, &end, 10);
+  if (errno || *end)
+    return NULL;
+  uint64_t seconds = ticks / (uint64_t)hz;
+  if (seconds > (uint64_t)now->tv_sec)
+    return NULL;
+  int64_t age = (int64_t)((uint64_t)now->tv_sec - seconds);
+  if ((long double)now->tv_nsec / 1000000000L <
+      (long double)(ticks % (uint64_t)hz) / hz)
+    age--;
+  return age < 0 ? NULL : json_object_new_int64(age);
+}
 static J *mqtt_health(const MqttConfig *c) {
   J *j = obj();
   struct timespec up;
-  if (!clock_gettime(CLOCK_BOOTTIME, &up))
+  if (!clock_gettime(CLOCK_BOOTTIME, &up)) {
     num(j, "uptime_s", up.tv_sec);
-  else
+    json_object_object_add(j, "agent_uptime_s",
+                           mqtt_process_age(worker_start_ticks,
+                                            sysconf(_SC_CLK_TCK), &up));
+  } else {
     json_object_object_add(j, "uptime_s", NULL);
+    json_object_object_add(j, "agent_uptime_s", NULL);
+  }
   const char *unknown[] = {"cpu_pct", "mem_used_pct", "wifi_rssi_dbm", "temp_c",
                            "firmware_update_pending"};
   for (size_t i = 0; i < sizeof unknown / sizeof *unknown; i++)
