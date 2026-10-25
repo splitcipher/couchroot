@@ -22,7 +22,9 @@ class FirmwareTrialTests(unittest.TestCase):
                          original["host_sha256"], original["launcher_sha256"],
                          "uname -m", "test ! -L /etc/prd_info.ini", "3.1.3"):
             self.assertIn(required, guard)
-        self.assertNotIn(trial.FIRMWARE, managed_guard(original))
+        # 2310.0 is now the certified ordinary baseline, so the trial no longer
+        # differs by firmware/pin; its distinction is clearing cleanup and marking
+        # every capability untested (asserted above).
         for key in (*trial.BASELINE, "firmware_file_sha256"):
             with self.assertRaises(Refused):
                 trial.guard({**value, key: "changed"})
@@ -52,7 +54,9 @@ class FirmwareTrialTests(unittest.TestCase):
                 "/opt/couchroot-native-recovery/" + "a" * 32 + "/code",
                 "b" * 64, "127.0.0.1", "192.0.2.10")
         old = native_rescue.plan(*args, tag="c" * 32)
-        self.assertNotIn("firmware_file_sha256", old)
+        # 2310.0 is the certified baseline and carries the prd_info pin, so even the
+        # default rescue binds firmware_file_sha256 now.
+        self.assertIn("firmware_file_sha256", old)
         value = native_rescue.plan(*args, tag="c" * 32, firmware=trial.FIRMWARE)
         for script in native_rescue.commands(value).values():
             self.assertIn(trial.FIRMWARE, script)

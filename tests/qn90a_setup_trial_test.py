@@ -28,10 +28,12 @@ class Qn90aSetupTrialTests(unittest.TestCase):
         # The ordinary registry profile is untouched and still 2301.1 — the
         # quarantine invariant from qn90a_firmware_trial_test holds here too.
         self.assertEqual(profile("qn90a"), original)
-        self.assertEqual(original["firmware"], "T-NKM2AKUC-2301.1")
-        self.assertNotIn(trial.FIRMWARE, managed_guard(original))
-        # The trial contract itself is pinned to 2310.0.
+        # 2310.0 is the certified ordinary baseline, carrying the prd_info pin; the
+        # contract matches it and additionally clears cleanup / marks caps untested.
+        self.assertEqual(original["firmware"], "T-NKM2AKUC-2310.0")
+        self.assertIn("firmware_file_sha256", original)
         self.assertEqual(value["firmware"], trial.FIRMWARE)
+        self.assertIn("firmware_file_sha256", value)
 
     def test_contract_refuses_when_ordinary_baseline_drifts(self):
         # If the private profile were mutated off the reviewed 2301.1 baseline,

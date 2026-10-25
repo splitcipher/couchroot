@@ -1,7 +1,7 @@
 """Explicit QN90A 2310.0 setup/cleanup + interrupted-upgrade trial contract.
 
 A sanctioned, caller-authorized path to exercise full setup/cleanup and upgrade
-recovery on firmware T-NKM2AKUC-2310.0 WITHOUT promoting 2310.0 into the ordinary
+recovery on the reviewed QN90A firmware WITHOUT promoting it into the ordinary
 setup registry. The ordinary registry deliberately refuses 2310.0 (see
 ``qn90a_firmware_trial`` and ``tests/qn90a_firmware_trial_test``); this module never
 changes that, is never an automatic fallback after a firmware refusal, and the
@@ -23,7 +23,7 @@ from .engine import Engine, pending, run_id
 from . import qn90a_firmware_trial as firmware_trial
 
 SCOPE = "qn90a-2310-setup-cleanup-trial"
-FIRMWARE = firmware_trial.FIRMWARE  # "T-NKM2AKUC-2310.0"
+FIRMWARE = firmware_trial.FIRMWARE  # the reviewed QN90A firmware, from the trial pin
 # Cleanup is limited to the live-re-reviewed allowlist on 2310.0: of the ten apps
 # in the historical 2301.1 map, only Xbox remains installed (read-only evidence
 # capture, 2026-10-25). Certification must not silently widen this.
