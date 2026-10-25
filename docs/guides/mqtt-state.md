@@ -2,8 +2,8 @@
 
 This increment is **offline-tested source, not TV acceptance**. Feature 1's S90D
 deployment uses `a4e942d` plus its bounded candidate-provenance correction. The
-owner reported HA discovery/commands, HA birth and broker-outage checks passed
-on 2026-10-24; the TV reboot remains pending separate authorization. Keep that
+owner accepted feature 1 on S90D on 2026-10-24: discovery/commands, HA birth,
+broker outage and unattended reboot all passed on the TV/HA sides. Keep that
 deployed build separate from this feature-2 branch. Do not proceed
 to feature 3 controls on the strength of simulated state or a successful install.
 
@@ -75,7 +75,15 @@ becomes available with empty options. Identifiers are now a list and Root OK has
 explicit ON/OFF rendering, covered by both golden fixtures.
 Mute, Game mode, Kid mode and Telemetry block likewise render booleans as
 `ON`/`OFF`, while a `null` reading remains unknown. Their command payloads and
-unsupported-control availability are unchanged.
+unsupported-control availability are unchanged. No Volume level or Muted
+read-only entities are added in feature 2: keep 27 entities and wait for feature 3
+for HA volume/mute controls. The validated `state.volume` and `state.muted` values
+remain visible in the raw state document but cannot enable their control entities.
+With all implemented adapters readable, exactly seven entities are available:
+Firmware, Uptime, Root OK, Agent uptime, App (sensor), CPU and Memory. The other
+20 stay unavailable. This is conditional on real adapter success: an absent or
+denied App/CPU/Memory reader stays unsupported; temporary failures after support
+was established render unknown instead. No hardware result is inferred here.
 
 ## Field-by-field boundary
 
@@ -119,10 +127,12 @@ The normal native build checks the new headers in its source manifest, ARMv7
 soft-float ABI, dependency/GLIBC limits and two byte-identical builds. These checks
 cannot qualify vendor API semantics or signed service privileges on a TV.
 
+Exact entity/field expectations are in the [S90D acceptance contract](mqtt-state-acceptance.md).
+
 ## Later owner-run acceptance and rollback
 
-1. Finish the separately prepared **feature-1 S90D-only** acceptance first,
-   including its separately authorized reboot observation. Feature 1 has 26
+1. Preserve the accepted **feature-1 S90D-only** baseline (agent 0.7.56),
+   including its signed package, worker and recovery journals. Feature 1 has 26
    entities; this feature-2 build has 27 because Agent uptime is additive.
    This document does not authorize any live action.
 2. For a separately authorized feature-2 trial, retain original credentials,

@@ -23,6 +23,30 @@ class MqttStateTests(unittest.TestCase):
         return json.loads(self.cli('projection', input=json.dumps(dict(
             observation=observation, fresh=fresh, foreground=foreground))))
 
+    def test_read_capabilities_never_enable_any_command_entity(self):
+        # Exercise discovery directly with every capability asserted, including
+        # control keys: adapter support is not permission to offer a setter.
+        for device in ['qn90a', 's90d']:
+            self.settings.update(device=device, state=True, control=True)
+            self.credentials.write_text('MQTT_USER=tv-' + device +
+                                        '\nMQTT_PASSWORD=' + self.secret + '\n')
+            self.save()
+            cmps = json.loads(self.cli('discovery-all-supported',
+                                      str(self.config), device))['cmps']
+            self.assertEqual(len(cmps), 27)
+            self.assertEqual(len({e['unique_id'] for e in cmps.values()}), 27)
+            controls = {k for k, e in cmps.items() if 'command_topic' in e}
+            self.assertEqual(controls, {'power', 'screen', 'mute', 'game_mode',
+                'kid_mode', 'telemetry_block', 'source', 'app_select',
+                'picture_mode', 'audio_output', 'volume', 'sleep_timer',
+                'screen_message'})
+            for key in controls:
+                self.assertEqual(cmps[key]['availability_topic'],
+                                 'tv/' + device + '/unsupported', key)
+            for key in ['app', 'cpu', 'memory', 'agent_uptime']:
+                self.assertEqual(cmps[key]['availability_topic'],
+                                 'tv/' + device + '/availability', key)
+
     def test_metrics_warmup_reset_gap_malformed_and_recovery(self):
         def sample(at, stat, mem='MemTotal: 2000 kB\nMemAvailable: 500 kB\n'):
             return dict(at=at, stat=stat, mem=mem)

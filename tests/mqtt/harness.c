@@ -144,8 +144,14 @@ int main(int argc, char **argv) {
   }
   if (!good)
     return 65;
-  if (!strcmp(argv[1], "discovery")) {
-    J *j = mqtt_discovery(&c, NULL);
+  if (!strcmp(argv[1], "discovery") ||
+      !strcmp(argv[1], "discovery-all-supported")) {
+    J *features = obj();
+    if (!strcmp(argv[1], "discovery-all-supported"))
+      for (size_t i = 0; i < sizeof mqtt_entities / sizeof *mqtt_entities; i++)
+        boolean(features, mqtt_entities[i].key, 1);
+    J *j = mqtt_discovery(&c, features);
+    json_object_put(features);
     puts(json(j));
     json_object_put(j);
     mqtt_wipe(&c, sizeof c);

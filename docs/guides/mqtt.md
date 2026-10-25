@@ -2,8 +2,8 @@
 
 This increment implements outbound MQTT and discovery in the existing native
 worker. Feature 2 is source-only and has **not been deployed or accepted on a TV**.
-The owner reported feature-1 S90D HA-side acceptance for discovery, birth and
-broker outage; its TV reboot remains pending. Feature 2 adds measured
+The owner accepted feature 1 on S90D on 2026-10-24, including discovery, birth,
+broker outage and unattended reboot on the TV and HA sides. Feature 2 adds measured
 state and explicitly gated remaining adapters; see the
 [state/qualification guide](mqtt-state.md). Stop at this boundary before controls.
 No broker, Home Assistant, router or telemetry configuration is changed.
