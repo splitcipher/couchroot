@@ -1,18 +1,21 @@
 # MQTT feature 2: measured state and remaining qualification gates
 
-This increment is **offline-tested source, not TV acceptance**. Feature 1's S90D
-deployment uses `a4e942d` plus its bounded candidate-provenance correction. The
-owner accepted feature 1 on S90D on 2026-10-24: discovery/commands, HA birth,
-broker outage and unattended reboot all passed on the TV/HA sides. Keep that
-deployed build separate from this feature-2 branch. Do not proceed
-to feature 3 controls on the strength of simulated state or a successful install.
+The pre-opt-in feature-2 candidate reached checkpoint A on S90D; this branch is a
+source-only opt-in revision and has not replaced that deployed worker. HA-side
+A/B/C acceptance remains pending. Feature 1's S90D deployment used `a4e942d` plus
+its bounded candidate-provenance correction. The owner accepted feature 1 on S90D
+on 2026-10-24: discovery/commands, HA birth, broker outage and unattended reboot
+all passed on the TV/HA sides. Do not proceed to feature 3 controls on the strength
+of simulated state or a successful install.
 
 ## Implemented read path
 
 The existing coordinator lease admits state collection only after the worker has
-read valid private MQTT configuration with `state:true`. No config means no state
-API reads. `state:false` leaves Firmware/Uptime/Root OK and the new Agent uptime
-diagnostic available and disables the state sampling. Existing telemetry stays enabled.
+read valid private MQTT configuration with `enabled:true` and `state:true`. No
+config or `enabled:false` means no broker connection and no state API reads.
+`state:false` starts the feature-1 discovery/health bridge but performs no state
+API reads; it leaves Firmware/Uptime/Root OK and the new Agent uptime diagnostic
+available. Existing telemetry stays enabled.
 
 `health.agent_uptime_s` measures whole elapsed seconds since the native worker
 process started, using its already-verified kernel start ticks and

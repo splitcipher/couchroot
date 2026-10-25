@@ -1,9 +1,12 @@
-# Feature-2 S90D acceptance contract (not deployed)
+# Feature-2 S90D acceptance contract
 
-Use the private pinned checklist for the exact source, proposed package version,
-artifact digests, original enrollment and accepted feature-1 recovery set. Source
-and offline tests do not qualify a service-context API on the TV. QN90A is gated
-on S90D acceptance and still requires its exact 2310 trial contract.
+The pre-opt-in feature-2 candidate reached checkpoint A on S90D. This branch is a
+source-only opt-in revision and has not replaced that deployed worker. HA-side
+A/B/C acceptance remains pending. Use the private pinned checklist for the exact
+source, package version, artifact digests, original enrollment and accepted
+feature-1 recovery set. Source and offline tests do not qualify a service-context
+API on the TV. QN90A is gated on S90D acceptance and still requires its exact 2310
+trial contract.
 
 ## Discovery and HA entities
 

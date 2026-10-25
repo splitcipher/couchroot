@@ -8,7 +8,8 @@ function createMqttLifecycle(agent, config, version, api) {
   );
   let observe = false,
     foreground = null,
-    workerId;
+    workerId,
+    configInactive = false;
   let busy = false,
     stopped = false,
     leaseState = 'waiting-worker';
@@ -27,13 +28,19 @@ function createMqttLifecycle(agent, config, version, api) {
         leaseState = 'waiting-worker';
         observe = false;
         foreground = null;
+        configInactive = false;
         return;
       }
       if (workerId !== status.worker_id) {
         observe = false;
         foreground = null;
+        configInactive = false;
         workerId = status.worker_id;
       }
+      // An unconfigured or disabled bridge is inert for this worker generation.
+      // A worker restart (new worker_id) is required to pick up a newly installed
+      // private config, so do not repeat the lease or state readers on every tick.
+      if (configInactive) return;
       const observations = observe ? await observer.sample(foreground) : null;
       if (stopped) return;
       const ready = agent.status();
@@ -54,6 +61,14 @@ function createMqttLifecycle(agent, config, version, api) {
       const result = await agent.operation(request);
       observe = !!(result && result.observe_state === true);
       foreground = result && result.foreground_app;
+      if (
+        result &&
+        (result.state === 'unconfigured' || result.state === 'disabled')
+      ) {
+        observe = false;
+        foreground = null;
+        configInactive = true;
+      }
       if (!stopped)
         leaseState =
           result &&

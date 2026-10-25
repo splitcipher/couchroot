@@ -30,6 +30,7 @@ They are not deployment instructions or acceptance of the current source.
 
 - [Home Assistant MQTT bridge](guides/mqtt.md)
 - [MQTT measured state and qualification gates](guides/mqtt-state.md)
+- [Feature-2 S90D HA acceptance contract](guides/mqtt-state-acceptance.md)
 
 ## Project plans and release records
 

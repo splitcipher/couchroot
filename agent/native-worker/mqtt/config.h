@@ -210,10 +210,12 @@ static int mqtt_config(const char *path, const char *device,
       inet_pton(AF_INET, c->host, &addr) == 1 && port > 0 && port <= 65535 &&
       mqtt_string(j, "credentials_file", c->credentials, sizeof c->credentials);
   c->port = (int)port;
-  c->enabled = mqtt_boolean(j, "enabled", 1);
-  c->state = mqtt_boolean(j, "state", 1);
+  /* A valid-looking file is not consent. Every Home Assistant feature is off
+   * unless the owner explicitly enables it in this private configuration. */
+  c->enabled = mqtt_boolean(j, "enabled", 0);
+  c->state = mqtt_boolean(j, "state", 0);
   for (size_t i = 6; i < sizeof keys / sizeof *keys; i++) {
-    int value = mqtt_boolean(j, keys[i], i < 10);
+    int value = mqtt_boolean(j, keys[i], 0);
     if (value < 0 || (i >= 10 && value))
       good = 0; /* Later features cannot be enabled yet. */
   }

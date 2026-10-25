@@ -52,6 +52,8 @@ class MqttTests(unittest.TestCase):
             broker_host="127.0.0.1",
             broker_port=1883,
             credentials_file=str(self.credentials),
+            enabled=True,
+            state=True,
         )
         self.save()
         self.bin = os.environ["MQTT_HARNESS"]
@@ -329,6 +331,24 @@ class MqttTests(unittest.TestCase):
         self.config.write_text(self.config.read_text() + " garbage")
         self.assertEqual(self.config_ok(), "invalid")
 
+    def test_missing_or_false_enabled_is_inert(self):
+        for enabled in ("missing", False):
+            saved = dict(self.settings)
+            if enabled == "missing":
+                self.settings.pop("enabled", None)
+            else:
+                self.settings["enabled"] = False
+            self.save()
+            result = subprocess.run(
+                [self.bin, "run", str(self.config), "qn90a"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=5,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn(b"ready", result.stdout)
+            self.settings = saved
+
     def test_command_contract_and_unknown_fields(self):
         valid = {
             "power": {"on": False},
@@ -379,6 +399,7 @@ class MqttTests(unittest.TestCase):
     def test_discovery_golden_and_unknown_state(self):
         for device in ("qn90a", "s90d"):
             self.settings["device"] = device
+            self.settings.pop("state", None)
             self.save()
             self.credentials.write_text(
                 "MQTT_USER=tv-" + device + "\nMQTT_PASSWORD=" + self.secret + "\n"
@@ -388,6 +409,16 @@ class MqttTests(unittest.TestCase):
                 (ROOT / "tests/fixtures" / ("mqtt-" + device + ".json")).read_text()
             )
             self.assertEqual(actual, golden)
+
+    def test_missing_state_keeps_reader_entities_unavailable(self):
+        self.settings.pop("state", None)
+        self.save()
+        discovery = json.loads(self.cli("discovery", str(self.config), "qn90a"))
+        for key in ("app", "cpu", "memory"):
+            self.assertEqual(
+                discovery["cmps"][key]["availability_topic"],
+                "tv/qn90a/unsupported",
+            )
 
     def test_connect_birth_reconnect_retained_and_nonretained_results(self):
         self.start()

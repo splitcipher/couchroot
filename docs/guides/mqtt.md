@@ -1,21 +1,30 @@
 # Home Assistant MQTT bridge — features 1–2
 
 This increment implements outbound MQTT and discovery in the existing native
-worker. Feature 2 is source-only and has **not been deployed or accepted on a TV**.
-The owner accepted feature 1 on S90D on 2026-10-24, including discovery, birth,
-broker outage and unattended reboot on the TV and HA sides. Feature 2 adds measured
-state and explicitly gated remaining adapters; see the
+worker. The pre-opt-in feature-2 candidate reached checkpoint A on S90D; this
+branch adds the explicit opt-in defaults and has not replaced the deployed worker.
+HA-side A/B/C acceptance remains pending. The owner accepted feature 1 on S90D on
+2026-10-24, including discovery, birth, broker outage and unattended reboot on
+the TV and HA sides. Feature 2 adds measured state and explicitly gated remaining
+adapters; see the
 [state/qualification guide](mqtt-state.md). Stop at this boundary before controls.
-No broker, Home Assistant, router or telemetry configuration is changed.
+No broker, Home Assistant, router or telemetry configuration is changed by the
+repository.
 
 The signed JS coordinator renews an authenticated `mqtt.start` lease every two
-seconds only after native readiness, with no maintenance/upgrade hold. The worker
-reads its own root-only configuration; credentials never traverse IPC or the
-public HTTPS API. The operation is unavailable to bounded/held-bootstrap workers
-and is not in the public API operation allowlist. A missing/invalid configuration
-leaves MQTT unconfigured without preventing root administration. Existing packages
-without this capability remain usable. No listener, installer, watchdog service,
-credential-copy helper or new runtime dependency is added.
+seconds only after native readiness, with no maintenance/upgrade hold, and only
+after an explicitly enabled private configuration has admitted the bridge. The
+worker reads its own root-only configuration; credentials never traverse IPC or
+the public HTTPS API. The operation is unavailable to bounded/held-bootstrap
+workers and is not in the public API operation allowlist. A missing, invalid,
+`enabled:false` configuration leaves MQTT unconfigured or disabled without
+preventing root administration. `state:false` admits discovery/health only and
+disables feature-2 state sampling. The coordinator caches that
+inactive state for the current worker generation instead of retrying the lease
+every tick; install a new configuration and restart the worker through the
+guarded lifecycle to opt in. Existing packages without this capability remain
+usable. No listener, installer, watchdog service, credential-copy helper or new
+runtime dependency is added.
 
 ## Configuration and private material
 
@@ -49,13 +58,28 @@ The connection uses plain TCP as specified; there is no TLS or anonymous fallbac
 Do not reuse these credentials for other services. A worker restart is required
 after a config/credential change; no MQTT command can reconfigure the connection.
 
-`enabled` defaults true **only when a valid configuration is present**. Feature
-flag `state` defaults true and gates the feature-2 readers. `control`, `events`
-and `notifications` default true as rollout intent but cannot enable adapters that
-do not exist. Setting them false also leaves those features unavailable. `kid_mode`, `resilience` and
-`telemetry_block` default false; true is refused until those later features have
-implementation and acceptance. Existing telemetry is left untouched: feature 1's
-health snapshot does not cover it sufficiently to disable the old collector.
+MQTT is opt-in. **The example is fully disabled.** A missing configuration,
+missing `enabled` key, or `enabled:false` leaves the bridge inert: no broker
+connection, discovery, availability, state or health publication, and no state
+sampling. Set `enabled:true` to activate the bridge. Feature flag `state` also
+defaults false and must be set true for the feature-2 App/CPU/Memory readers and
+state sampling. `control`, `events` and `notifications` default false; true is
+accepted as rollout intent but cannot enable adapters that do not exist.
+`kid_mode`, `resilience` and `telemetry_block` default false; true is refused
+until those later features have implementation and acceptance. Existing telemetry
+is left untouched: feature 1's health snapshot does not cover it sufficiently to
+disable the old collector.
+
+### Opt-in checklist
+
+1. Copy the placeholder example to the private root-only config path.
+2. Set `device`, `device_name` and `broker_host`; install the credential file out
+   of band.
+3. Set `enabled:true` and `state:true` for this feature-2 read-only increment.
+4. Restart the native worker through the existing guarded lifecycle. A config
+   change is not picked up by a running worker.
+5. Verify `mqtt.lease_state` becomes `started`, then verify discovery and the
+   expected entity availability in HA. A lease is not HA acceptance.
 
 ## Topics and discovery
 
