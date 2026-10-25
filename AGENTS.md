@@ -24,3 +24,17 @@ Validate changes at the affected boundary: `npm test` for UI/preview,
 `python3 -m unittest discover -s tests -p '*_test.py'` for setup/deployment,
 and skill validation when editing skills. Report local tests separately from
 actual device verification. See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for release work.
+
+For fast local iteration, the same Python tests also run under pytest in parallel,
+about 5x faster — `pytest -n auto` is ~21s vs ~107s serial (install the dev extras:
+`pip install -e '.[dev]'`; worksteal distribution is preconfigured). Inner loop while
+editing a module: `pytest tests/<name>_test.py` (sub-second). Broad check skipping
+the one slow suite: `pytest -n auto --ignore=tests/s90d_recovery_test.py` (a few
+seconds). These are convenience runners only — the `unittest` command above remains
+the authoritative gate, and device/sandbox validation should use the Python tests,
+not `npm test` (its UI suite launches a browser).
+
+`tests/s90d_recovery_test.py` is the slow outlier (~110s cumulative): each test runs
+the real generated recovery shell against a temp filesystem — ~385 utility
+subprocesses per test — which is the fidelity the recovery-safety suite exists for,
+not waste. Run it on demand or in CI; keep it out of the rapid inner loop.
