@@ -61,6 +61,9 @@ Ordinary state ticks do not. App, Source, Picture mode and Audio output selects
 **remain unavailable** because feature 3's command adapters do not exist. No select
 becomes available with empty options. Identifiers are now a list and Root OK has
 explicit ON/OFF rendering, covered by both golden fixtures.
+Mute, Game mode, Kid mode and Telemetry block likewise render booleans as
+`ON`/`OFF`, while a `null` reading remains unknown. Their command payloads and
+unsupported-control availability are unchanged.
 
 ## Field-by-field boundary
 

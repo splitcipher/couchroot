@@ -91,12 +91,19 @@ static J *mqtt_discovery(const MqttConfig *c, J *features) {
     if (!strcmp(p, "switch")) {
       str(e, "payload_on", "{\"on\":true}");
       str(e, "payload_off", "{\"on\":false}");
-      str(e, "state_on",
-          (!strcmp(key, "power") || !strcmp(key, "screen")) ? "on" : "True");
+      int boolean_state = strcmp(key, "power") && strcmp(key, "screen");
+      if (boolean_state) {
+        snprintf(value, sizeof value,
+                 "{{ none if value_json.%s is none else ('ON' if "
+                 "value_json.%s else 'OFF') }}",
+                 mqtt_entities[i].field, mqtt_entities[i].field);
+        str(e, "value_template", value);
+      }
+      str(e, "state_on", boolean_state ? "ON" : "on");
       str(e, "state_off",
           !strcmp(key, "power")    ? "standby"
           : !strcmp(key, "screen") ? "off"
-                                   : "False");
+                                   : "OFF");
     } else if (!strcmp(p, "binary_sensor")) {
       str(e, "payload_on", "True");
       str(e, "payload_off", "False");

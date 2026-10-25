@@ -50,14 +50,14 @@
       "unique_id": "tv_qn90a_mute",
       "availability_topic": "tv/qn90a/unsupported",
       "state_topic": "tv/qn90a/state",
-      "value_template": "{{ value_json.muted | default(none) }}",
+      "value_template": "{{ none if value_json.muted is none else ('ON' if value_json.muted else 'OFF') }}",
       "command_topic": "tv/qn90a/cmd/mute",
       "retain": false,
       "qos": 0,
       "payload_on": "{\"on\":true}",
       "payload_off": "{\"on\":false}",
-      "state_on": "True",
-      "state_off": "False"
+      "state_on": "ON",
+      "state_off": "OFF"
     },
     "game_mode": {
       "p": "switch",
@@ -65,14 +65,14 @@
       "unique_id": "tv_qn90a_game_mode",
       "availability_topic": "tv/qn90a/unsupported",
       "state_topic": "tv/qn90a/state",
-      "value_template": "{{ value_json.game_mode | default(none) }}",
+      "value_template": "{{ none if value_json.game_mode is none else ('ON' if value_json.game_mode else 'OFF') }}",
       "command_topic": "tv/qn90a/cmd/game_mode",
       "retain": false,
       "qos": 0,
       "payload_on": "{\"on\":true}",
       "payload_off": "{\"on\":false}",
-      "state_on": "True",
-      "state_off": "False"
+      "state_on": "ON",
+      "state_off": "OFF"
     },
     "kid_mode": {
       "p": "switch",
@@ -80,14 +80,14 @@
       "unique_id": "tv_qn90a_kid_mode",
       "availability_topic": "tv/qn90a/unsupported",
       "state_topic": "tv/qn90a/state",
-      "value_template": "{{ value_json.kid_mode | default(none) }}",
+      "value_template": "{{ none if value_json.kid_mode is none else ('ON' if value_json.kid_mode else 'OFF') }}",
       "command_topic": "tv/qn90a/cmd/kid_mode",
       "retain": false,
       "qos": 0,
       "payload_on": "{\"on\":true}",
       "payload_off": "{\"on\":false}",
-      "state_on": "True",
-      "state_off": "False"
+      "state_on": "ON",
+      "state_off": "OFF"
     },
     "telemetry_block": {
       "p": "switch",
@@ -95,14 +95,14 @@
       "unique_id": "tv_qn90a_telemetry_block",
       "availability_topic": "tv/qn90a/unsupported",
       "state_topic": "tv/qn90a/state",
-      "value_template": "{{ value_json.telemetry_block | default(none) }}",
+      "value_template": "{{ none if value_json.telemetry_block is none else ('ON' if value_json.telemetry_block else 'OFF') }}",
       "command_topic": "tv/qn90a/cmd/telemetry_block",
       "retain": false,
       "qos": 0,
       "payload_on": "{\"on\":true}",
       "payload_off": "{\"on\":false}",
-      "state_on": "True",
-      "state_off": "False"
+      "state_on": "ON",
+      "state_off": "OFF"
     },
     "source": {
       "p": "select",
