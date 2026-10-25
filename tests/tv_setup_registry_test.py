@@ -101,6 +101,48 @@ class RegistryTest(unittest.TestCase):
             with self.assertRaisesRegex(Refused, "skeleton"):
                 registry.profile("qn90a")
 
+    def test_reviewed_identity_is_read_from_the_profile_file(self):
+        for device in ("qn90a", "s90d"):
+            value = registry.profile(device)
+            self.assertEqual(
+                registry.reviewed_identity(device),
+                {"model": value["model"], "firmware": value["firmware"]},
+            )
+            self.assertTrue(registry.has_identity(value, device))
+            for key in ("model", "firmware"):
+                self.assertFalse(registry.has_identity({**value, key: "changed"}, device))
+                missing = {k: v for k, v in value.items() if k != key}
+                self.assertFalse(registry.has_identity(missing, device))
+        self.assertFalse(registry.has_identity(None, "qn90a"))
+        temporary, folder = self._temporary_profiles()
+        self.addCleanup(temporary.cleanup)
+        target = folder / "qn90a.json"
+        data = json.loads(target.read_text())
+        data["firmware"] = "T-NKM2AKUC-9999.0"
+        target.write_text(json.dumps(data))
+        with patch.object(registry, "PROFILE_DIR", folder):
+            self.assertEqual(
+                registry.reviewed_identity("qn90a")["firmware"], "T-NKM2AKUC-9999.0"
+            )
+
+    def test_product_modules_do_not_hardcode_reviewed_identity(self):
+        # Identity lives in the profile. Only the firmware trial's explicit
+        # historical BASELINE pin may repeat it, to detect profile drift.
+        literals = {
+            value[key]
+            for value in registry.profiles().values()
+            for key in ("model", "firmware")
+        }
+        allowed = {"qn90a_firmware_trial.py"}
+        found = [
+            path.name + ":" + literal
+            for path in sorted((REPO / "tvsetup").glob("*.py"))
+            if path.name not in allowed
+            for literal in sorted(literals)
+            if literal in path.read_text()
+        ]
+        self.assertEqual(found, [])
+
 
 if __name__ == "__main__":
     unittest.main()

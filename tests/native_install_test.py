@@ -86,7 +86,7 @@ def fixture(root):
     (root/'baseline.awk').write_bytes(BASELINE)
     (root/'dep.awk').write_bytes(b'dependency')
     baseline = root/'enrollment.json'
-    atomic_json(baseline, {'schema':1, 'device':'qn90a', 'firmware':'T-NKM2AKUC-2301.1',
+    atomic_json(baseline, {'schema':1, 'device':'qn90a', 'firmware':profile('qn90a')['firmware'],
                           'hook':{'path':HOOK, 'file':'baseline.awk', 'sha256':sha(BASELINE)},
                           'dependencies':[{'path':DEPENDENCY,'file':'dep.awk','sha256':sha(b'dependency')}],
                           'recovery_guards':{RECOVERY:sha(b'enabled')}})

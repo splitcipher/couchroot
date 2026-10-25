@@ -15,6 +15,7 @@ from unittest.mock import patch
 from installer_test import elf
 from tvsetup import installer, native_hook, native_telemetry
 from tvsetup.common import Refused, sha
+from tvsetup.config import profile
 from tvsetup.native_install import capture
 
 
@@ -62,7 +63,7 @@ class ScriptTests(unittest.TestCase):
         self.stub('systemd-run', 'echo submit >> "$EVENTS"\ntest "$SUBMIT_FAIL" = 0')
         if not shutil.which('sha256sum'):
             self.stub('sha256sum', 'exec shasum -a 256 "$@"')
-        firmware = self.root/'firmware'; firmware.write_text('Version=T-NKM2AKUC-2301.1;\n')
+        firmware = self.root/'firmware'; firmware.write_text('Version='+profile('qn90a')['firmware']+';\n')
         self.data = self.root/'data'; self.data.mkdir()
         self.runtime = self.root/'runtime'; self.runtime.mkdir()
         (self.runtime/'lock').write_bytes(b'unchanged lock')

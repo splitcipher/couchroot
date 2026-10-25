@@ -13,6 +13,7 @@ from .engine import Engine, pending, run_id
 from .operations import Driver
 from .planner import Action, STOCK_HOME, HUB
 from .config import resolve
+from .registry import has_identity, reviewed_identity
 from .site import binding, configured_profile, load_site
 from .transport import Transport
 
@@ -81,11 +82,7 @@ def validate_doc(doc, identity, profile, target_binding):
             raise Refused("Malformed action in first-screen trial journal")
     if actual != expected:
         raise Refused("Trial journal action set differs from the exact allowlist")
-    if (
-        profile.get("id") != "qn90a"
-        or profile.get("model") != "QN85QN90AAFXZA"
-        or profile.get("firmware") != "T-NKM2AKUC-2301.1"
-    ):
+    if profile.get("id") != "qn90a" or not has_identity(profile, "qn90a"):
         raise Refused("Configured QN90A identity/firmware changed")
     return doc
 
@@ -147,11 +144,11 @@ def _context(identity, site, transport_factory=None):
 
 def _prepare_locked(site, transport_factory):
     profile = configured_profile("qn90a", site)
-    if (
-        profile.get("model") != "QN85QN90AAFXZA"
-        or profile.get("firmware") != "T-NKM2AKUC-2301.1"
-    ):
-        raise Refused("This trial is pinned to QN85QN90AAFXZA / T-NKM2AKUC-2301.1")
+    if not has_identity(profile, "qn90a"):
+        pinned = reviewed_identity("qn90a")
+        raise Refused(
+            "This trial is pinned to " + pinned["model"] + " / " + pinned["firmware"]
+        )
     if pending(STATE, "qn90a"):
         raise Refused("Resolve the pending QN90A setup/trial operation first")
     identity = run_id()

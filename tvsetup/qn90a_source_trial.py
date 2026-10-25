@@ -15,6 +15,7 @@ from .config import resolve
 from .engine import Engine, pending, run_id
 from .operations import Driver, observed
 from .planner import Action, managed_package_ok
+from .registry import has_identity
 from .site import binding, configured_profile, load_site
 from .transport import Transport, Q
 
@@ -163,10 +164,7 @@ class SourceEngine(Engine):
 def context(identity, site, prepared=None):
     safe_id(identity)
     profile = configured_profile("qn90a", site)
-    if (
-        profile["model"] != "QN85QN90AAFXZA"
-        or profile["firmware"] != "T-NKM2AKUC-2301.1"
-    ):
+    if not has_identity(profile, "qn90a"):
         raise Refused("This source trial is pinned to the QN90A firmware")
     folder = STATE / "runs" / identity
     doc = read_json(folder / "journal.json")

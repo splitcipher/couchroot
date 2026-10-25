@@ -17,7 +17,7 @@ import zipfile
 from .common import REPO, Refused, atomic_json, run, sha
 from .config import LAUNCHER_COMPONENTS, profile
 from .dependencies import checks as dependency_checks, tool_check
-from .registry import accepted_devices
+from .registry import accepted_devices, reviewed_identity
 
 WEB_COMPONENTS = LAUNCHER_COMPONENTS
 
@@ -168,7 +168,9 @@ def parser():
 def validate_selection(device, launcher):
     if launcher == "native" and device != "qn90a":
         raise Refused(
-            "Native Hub supports only QN90A firmware T-NKM2AKUC-2301.1; choose --launcher web for S90D"
+            "Native Hub supports only QN90A firmware "
+            + reviewed_identity("qn90a")["firmware"]
+            + "; choose --launcher web for S90D"
         )
 
 

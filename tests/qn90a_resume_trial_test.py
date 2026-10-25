@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from tvsetup.common import Refused
 from tvsetup.planner import HUB, STOCK_HOME
+from tvsetup.registry import reviewed_identity
 from tvsetup import qn90a_resume_trial as trial
 
 
@@ -54,7 +55,7 @@ class Qn90aResumeTrialTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.state = Path(self.tmp.name)
         self.site = {'devices':{'qn90a':{'host':'192.0.2.10','device_id':'uuid:00000000-1234-1234-1234-123456789abc'}}, '_trust':{}}
-        self.profile = {'id':'qn90a','model':'QN85QN90AAFXZA','firmware':'T-NKM2AKUC-2301.1'}
+        self.profile = {'id':'qn90a', **reviewed_identity('qn90a')}
         self.transport = FakeTransport(self.profile, self.state)
         patches = [
             patch.object(trial, 'STATE', self.state),
@@ -70,8 +71,9 @@ class Qn90aResumeTrialTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_wrong_model_or_firmware_refused_before_snapshot(self):
-        with patch.object(trial, 'configured_profile', return_value={**self.profile,'firmware':'wrong'}):
-            with self.assertRaises(Refused):trial.start(self.site)
+        for key in ('model', 'firmware'):
+            with patch.object(trial, 'configured_profile', return_value={**self.profile, key:'wrong'}):
+                with self.assertRaises(Refused):trial.start(self.site)
         self.assertFalse((self.state/'runs').exists())
 
     def test_unexpected_baseline_refused_without_widening(self):
