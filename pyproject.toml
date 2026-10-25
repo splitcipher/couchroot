@@ -39,4 +39,7 @@ namespaces = true
 # `python3 -m unittest discover`, which stays the authoritative gate (AGENTS.md).
 testpaths = ["tests"]
 python_files = ["*_test.py", "test_*.py"]
-addopts = "-p no:cacheprovider"
+# worksteal lets idle workers pull the clustered slow recovery tests instead of one
+# worker serializing them (~32s -> ~21s under `-n auto`). It is ignored when `-n`
+# is absent, so the single-file inner loop stays serial and fast.
+addopts = "-p no:cacheprovider --dist worksteal"
