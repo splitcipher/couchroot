@@ -37,6 +37,40 @@ test('both profiles validate candidate bytes without promoting readiness or sele
   }
  }finally{f.close();}
 });
+test('MQTT header provenance is admitted without promoting candidate readiness',()=>{
+ for(const schema of [1,2]){
+  const f=fixture(schema);try{
+   for(const name of ['bridge','commands','config','discovery','wire'])
+    f.m.source['native-worker/mqtt/'+name+'.h']='a'.repeat(64);
+   f.seal();
+   for(const device of ['qn90a','s90d']){
+    assert.ok(loadCandidate(f.dir,device));
+    const status=createAgent({device},{payload:f.dir}).status();
+    assert.equal(status.native_candidate.state,'verified');
+    assert.equal(status.native_candidate.device_qualified,false);
+    assert.equal(status.selected_implementation,null);
+    assert.equal(status.worker_ready,false);
+   }
+  }finally{f.close();}
+ }
+});
+test('MQTT provenance rejects unknown paths and malformed digests',()=>{
+ const cases=[
+  ['native-worker/mqtt/other.h','a'.repeat(64)],
+  ['native-worker/mqtt/../worker.c','a'.repeat(64)],
+  ['native-worker/mqtt/sub/config.h','a'.repeat(64)],
+  ['native-worker/mqtt/config.c','a'.repeat(64)],
+  ['native-worker/mqtt/.h','a'.repeat(64)],
+  ['native-worker/mqtt/config.h/extra','a'.repeat(64)],
+  ['native-worker/mqtt/config.h','not-a-digest'],
+ ];
+ for(const schema of [1,2])for(const [name,digest] of cases){
+  const f=fixture(schema);try{
+   f.m.source[name]=digest;f.seal();
+   assert.throws(()=>loadCandidate(f.dir,'s90d'),/candidate-source-manifest/);
+  }finally{f.close();}
+ }
+});
 test('invalid schema profile build provenance and dependency declarations are rejected',()=>{
  const cases=[m=>m.schema=2,m=>m.selection='native',m=>m.device_qualified=true,m=>m.reproducible_builds=1,
   m=>m.candidate_profiles=['s90d'],m=>m.candidate_profiles=['qn90a','qn90a'],m=>m.toolchain.image='mutable:tag',

@@ -172,6 +172,19 @@ TV json-c compatibility, firmware controls or unattended startup.
 
 ## Owner-run deployment, acceptance and rollback
 
+Before installation, validate the actual prepared native payload with the
+coordinator's candidate checks, including its source provenance paths:
+
+```sh
+NATIVE_CANDIDATE_BUILD="$PREPARED_PAYLOAD" node --test tests/native-candidate.test.cjs
+```
+
+Use the prepared package's payload directory, containing `native-manifest.json`
+and its native binaries. MQTT's five source headers live under
+`native-worker/mqtt/`; they must be admitted explicitly without broadening the
+source-path guard to arbitrary nested files. This offline check does not qualify
+root acquisition, MQTT connectivity or unattended startup on a TV.
+
 For each TV separately, retain the current signed package, native worker candidate,
 source checkout and journals. Use the existing
 [native worker upgrade workflow](native-worker-upgrades.md) and
