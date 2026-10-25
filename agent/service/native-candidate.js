@@ -117,7 +117,7 @@ function validateManifest(m, device) {
           (/^(native-worker\/[a-z0-9-]+\.(c|h)|native-worker\/build\.sh|native-launcher\/(app-launcher\.c|build\.sh))$/.test(
             p
           ) ||
-            /^native-worker\/mqtt\/(bridge|commands|config|discovery|wire)\.h$/.test(
+            /^native-worker\/mqtt\/(bridge|commands|config|discovery|fd|foreground|metrics|state|wire)\.h$/.test(
               p
             ) ||
             (m.schema === 2 &&

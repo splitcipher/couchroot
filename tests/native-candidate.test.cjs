@@ -40,7 +40,7 @@ test('both profiles validate candidate bytes without promoting readiness or sele
 test('MQTT header provenance is admitted without promoting candidate readiness',()=>{
  for(const schema of [1,2]){
   const f=fixture(schema);try{
-   for(const name of ['bridge','commands','config','discovery','wire'])
+   for(const name of ['bridge','commands','config','discovery','fd','foreground','metrics','state','wire'])
     f.m.source['native-worker/mqtt/'+name+'.h']='a'.repeat(64);
    f.seal();
    for(const device of ['qn90a','s90d']){
