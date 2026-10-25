@@ -5,6 +5,8 @@
 <tizen:profile name="tv-samsung"/>
 <feature name="http://tizen.org/feature/web.service"/>
 <tizen:privilege name="http://tizen.org/privilege/internet"/>
+<tizen:privilege name="http://tizen.org/privilege/application.info"/>
+<tizen:privilege name="http://tizen.org/privilege/tv.audio"/>
 <tizen:privilege name="http://tizen.org/privilege/filesystem.read"/>
 <tizen:privilege name="http://tizen.org/privilege/filesystem.write"/>
 <tizen:service id="MiniRoot01.Service" auto-restart="true" on-boot="true"><tizen:content src="service/main.js"/><tizen:name>Minimal TV Administration</tizen:name><tizen:description>Owner-authenticated administration service.</tizen:description></tizen:service>

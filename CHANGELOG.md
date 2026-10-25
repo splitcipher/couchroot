@@ -28,6 +28,9 @@ milestones, not releases or blanket hardware acceptance. The former `dev0` and
 
 ### Changed
 
+- Make the Home Assistant MQTT bridge explicitly opt-in. Missing `enabled` and
+  optional feature flags now default off, and unconfigured or disabled leases are
+  not retried until the worker restarts (2026-10-25).
 - Use launcher-only recommendations on a device's first setup, leaving cleanup
   and telemetry opt-in; only a completed full-setup run (`scope: setup`) enables
   the previous defaults. UI, launcher-only, recovery and trial runs do not

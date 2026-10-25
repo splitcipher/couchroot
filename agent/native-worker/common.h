@@ -46,6 +46,8 @@ typedef void J;
   X(J *, json_object_new_boolean, (int))                                       \
   X(J *, json_object_new_double, (double))                                     \
   X(int, json_object_object_add, (J *, const char *, J *))                     \
+  X(size_t, json_object_array_length, (const J *))                             \
+  X(J *, json_object_array_get_idx, (const J *, size_t))                        \
   X(int, json_object_array_add, (J *, J *))                                    \
   X(int, json_object_object_get_ex, (const J *, const char *, J **))           \
   X(const char *, json_object_get_string, (J *))                               \

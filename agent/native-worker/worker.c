@@ -79,7 +79,9 @@ static void jobs_cleanup(void);
 static void helpers_cleanup(void);
 static void runtime_cleanup(void);
 static void containment_worker_stop(void);
+static void mqtt_stop(void);
 static void cleanup(void) {
+  mqtt_stop();
   if (active_child > 0) {
     pid_t pid = active_child;
     kill_group(pid);
@@ -429,12 +431,17 @@ static J *resource_inventory(void) {
   json_object_object_add(r, "helpers", hs);
   return r;
 }
+#include "mqtt/bridge.h"
 static J *operation(J *request, Wire *w, const char *seq) {
   const char *op = textval(request, "op");
   if (!op)
     return failure("Invalid operation");
   if (bootstrap_mode && strcmp(op, "status"))
     return failure("Held bootstrap supports status and bounded exec only");
+  if (!strcmp(op, "mqtt.start")) {
+    if (!production_mode) return failure("MQTT requires the production worker");
+    return success(mqtt_start(request));
+  }
   int needed = operation_descriptors(op);
   if (needed && !descriptor_admission(needed))
     return failure("Insufficient descriptors; operation not started");
@@ -523,6 +530,7 @@ static J *operation(J *request, Wire *w, const char *seq) {
         json_object_array_add(caps, json_object_new_string(held[i]));
     } else for (size_t i = 0; i < sizeof names / sizeof *names; i++)
       json_object_array_add(caps, json_object_new_string(names[i]));
+    if (production_mode) json_object_array_add(caps, json_object_new_string("mqtt-bridge-v1"));
     json_object_object_add(j, "capabilities", caps);
     return success(j);
   }
@@ -717,6 +725,8 @@ static J *operation(J *request, Wire *w, const char *seq) {
 }
 #include "offline-reconcile.h"
 int main(int argc, char **argv) {
+  if (argc == 2 && !strcmp(argv[1], "--mqtt-foreground"))
+    return mqtt_foreground_main();
   if (argc >= 2 && !strcmp(argv[1], "--reconcile-state"))
     return offline_reconcile(argc, argv);
 #ifdef NATIVE_WORKER_FAULT_TEST

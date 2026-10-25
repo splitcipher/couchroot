@@ -32,6 +32,14 @@ are excluded from new packages; records remain readable;
 the running agent no longer exposes managed migration/return methods. Existing
 legacy API routes reject unavailable operations. See [release gates](../docs/project/release-readiness.md).
 
+## MQTT integration
+
+The outbound [Home Assistant bridge](../docs/guides/mqtt.md) is implemented through
+the existing native worker and coordinator readiness lease. It requires a private
+root-owned configuration; without one it remains dormant. Feature 1 provides
+discovery and strict command refusal, with hardware controls/state adapters still
+unavailable. It has not been deployed or hardware-qualified.
+
 ## Enrolment
 
 Use `python3 -m tvsetup.autonomous_root --help` and the shared setup engine to
