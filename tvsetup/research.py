@@ -27,8 +27,11 @@ from __future__ import annotations
 
 import base64
 import json
+import os
+import stat as _stat
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Re-exported so run scripts need a single import line, not the old block.
@@ -108,3 +111,78 @@ class Run:
         from .agent_transport import AgentTransport
         profile = configured_profile(self.device, load_site())
         return AgentTransport(profile, self.root / label, client_path)
+
+
+class Checks:
+    """Collect-and-report preflight/verify checks.
+
+    The deploy sessions lost many cycles to ``assert cond`` in preflight scripts:
+    the first mismatch aborts, the model edits that one assertion and reruns, and
+    the next mismatch aborts again. ``Checks`` records every check and reports
+    them together, printing expected-vs-actual, so one run surfaces everything.
+    Call :meth:`require` at the end to fail (non-zero) only if something did.
+
+        c = Checks("qn90a preflight")
+        c.equal("firmware", status["firmware"], expected_fw)
+        c.equal("service", service_state, "not running")
+        c.require()
+    """
+
+    def __init__(self, label: str = ""):
+        self.label = label
+        self.results: list[tuple[bool, str, str]] = []
+
+    def check(self, name: str, ok, *, expected=None, actual=None) -> bool:
+        ok = bool(ok)
+        detail = ""
+        if not ok and (expected is not None or actual is not None):
+            detail = f"expected {expected!r}, got {actual!r}"
+        self.results.append((ok, name, detail))
+        return ok
+
+    def equal(self, name: str, actual, expected) -> bool:
+        return self.check(name, actual == expected, expected=expected, actual=actual)
+
+    @property
+    def failed(self) -> list[tuple[bool, str, str]]:
+        return [r for r in self.results if not r[0]]
+
+    def report(self) -> str:
+        lines = []
+        for ok, name, detail in self.results:
+            mark = "ok  " if ok else "FAIL"
+            lines.append(f"  [{mark}] {name}" + (f" — {detail}" if detail else ""))
+        passed = len(self.results) - len(self.failed)
+        head = f"{self.label or 'checks'}: {passed}/{len(self.results)} passed"
+        return "\n".join([head, *lines])
+
+    def require(self) -> None:
+        """Print the full report, then raise once if any check failed."""
+        print(self.report())
+        if self.failed:
+            names = ", ".join(name for _, name, _ in self.failed)
+            raise AssertionError(
+                f"{len(self.failed)} check(s) failed in {self.label or 'preflight'}: {names}"
+            )
+
+
+def host_stat(path) -> dict:
+    """Host-side file metadata via Python, not a `stat` shell-out.
+
+    ``stat`` takes GNU (`-c`) vs BSD/macOS (`-f`) format flags that are not
+    interchangeable; host scripts that used `stat -c`/`stat -f` failed on macOS.
+    Device-side scripts keep using the TV's GNU ``stat`` — this is for the host.
+    """
+    st = os.stat(path)
+    return dict(
+        mode=_stat.filemode(st.st_mode),
+        uid=st.st_uid,
+        gid=st.st_gid,
+        size=st.st_size,
+        mtime=st.st_mtime,
+    )
+
+
+def mtime_iso(path) -> str:
+    """ISO-8601 UTC mtime for a host path (replaces `date -r <epoch>`)."""
+    return datetime.fromtimestamp(os.stat(path).st_mtime, timezone.utc).isoformat()
